@@ -3,6 +3,6 @@ Title: Functions for Inside Out pixel project
 Version: 0.0.0.9000
 Authors@R: person("Clair", "Barnes", email = "c.barnes@warwick.ac.uk", role = c("aut", "cre"))
 Description: Pre-processing functions to assess spatial distribution of dead pixels in x-ray sensor
-Depends: R (>= 3.2.3)
+Depends: R (>= 3.1.3), tiff
 License: What license is it under?
 LazyData: true
