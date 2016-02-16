@@ -1,6 +1,6 @@
 #' Load one day's acquisitions from one channel
 #'
-#' Import one day's images from a single channel into an array
+#' Import one day's images into a single array
 #' @param img.date Date of images to import, in format yymmdd.
 #' @param channel Specify channel to import: black, grey or white.
 #' @param x Width of image. Default is 1996.
@@ -34,7 +34,6 @@ load.acq <- function(img.date, channel, x = 1996, y = 1996, z = 20, progress = F
         }
         # flip & transpose matrix to match orientation of original image
         m[,,i] <- t(tmp[nrow(tmp):1,,drop=FALSE])
-        
         if (progress) {setTxtProgressBar(pb,i)}
     } 
     return(m)
