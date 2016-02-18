@@ -12,8 +12,15 @@
 #'     levels = sd.levels(mean(data), sd(data)))
 #' 
 #' 
-sd.levels <- function(mean, sd) {
-    c(0, mean + (c(-3, -2, -1, -0.5, 0, 0.5, 1, 2, 3) * sd), 1)
+sd.levels <- function(data, midpoint = "mean") {
+    
+    if (midpoint == "median") {
+        m <- median(data)
+    } else {
+        m <- mean(data)
+    }
+    
+    c(min(data), m + (c(-3, -2, -1, -0.5, 0, 0.5, 1, 2, 3) * sd(data)), max(data))
 }
 
 
@@ -66,17 +73,10 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
     if (d > 2) {
         data <- data[,, rep(1, d-2)]
     }
-    
-    if (midpoint == "median") {
-        m <- median(data)
-    } else {
-        m <- mean(data)
-    }
-    s <- sd(data)
-    
+        
     filled.contour(x = c(1:dim(data)[1]), y = c(1:dim(data)[2]),
                    data,
-                   levels = sd.levels(m, s),
+                   levels = sd.levels(data, midpoint),
                    col = sd.colours(),
                    asp = T,
                    main = title
@@ -99,18 +99,11 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 #' 
 #' 
 pixel.image <- function(data, title = "", x.range = c(1:1996), y.range = c(1:1996), midpoint = "mean") {
-    
-    if (midpoint == "median") {
-        m <- median(data)
-    } else {
-        m <- mean(data)
-    }
-    s <- sd(data)
-    
+        
     image(x.range, y.range, 
           data[x.range, y.range], 
           col = sd.colours(),
-          breaks = sd.levels(m, s),
+          breaks = sd.levels(data, midpoint),
           main = title,
           asp = T)
 }
@@ -133,5 +126,5 @@ pixel.image <- function(data, title = "", x.range = c(1:1996), y.range = c(1:199
 #' 
 show.panels <- function(left.crop = 2, lower.crop = 32, width = 128, height = 1024) {
     abline(h = height - lower.crop + 0.5)
-    abline(v = (c(0:15)*128 - left.crop + 0.5))
+    abline(v = (c(1:15)*128 - left.crop + 0.5))
 }

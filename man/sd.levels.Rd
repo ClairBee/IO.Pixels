@@ -4,7 +4,7 @@
 \alias{sd.levels}
 \title{Set contour plot levels}
 \usage{
-sd.levels(mean, sd)
+sd.levels(data, midpoint = "mean")
 }
 \arguments{
 \item{mean}{Mean value to use as midpoint of levels}
