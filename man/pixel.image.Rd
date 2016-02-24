@@ -4,8 +4,8 @@
 \alias{pixel.image}
 \title{Display pixel values as image}
 \usage{
-pixel.image(data, title = "", x.range = c(1:1996), y.range = c(1:1996),
-  midpoint = "mean")
+pixel.image(data, title = "", x.range, y.range, midpoint = "mean",
+  break.levels)
 }
 \arguments{
 \item{data}{2-dimensional matrix containing values to be plotted}
@@ -17,6 +17,8 @@ pixel.image(data, title = "", x.range = c(1:1996), y.range = c(1:1996),
 \item{y.range}{Vector range showing y-range of cells to be included in plot}
 
 \item{midpoint}{Either 'mean' or 'median'. Default is 'mean'}
+
+\item{break.levels}{Vector of values used as breakpoints when binning values}
 }
 \description{
 Create an image with pixels shaded according to their distance from the mean value. Displays at lower resolution than contour plot (plots are 20% of the size), but much quicker (10% of time taken).

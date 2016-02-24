@@ -93,38 +93,48 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 #' @param y.range Vector range showing y-range of cells to be included in plot
 #' @param title String containing title to be printed with plot
 #' @param midpoint Either 'mean' or 'median'. Default is 'mean'
+#' @param break.levels Vector of values used as breakpoints when binning values
 #' @export
 #' @examples
 #' pixel.image(pw.mean)
 #' 
 #' 
-pixel.image <- function(data, title = "", x.range = c(1:1996), y.range = c(1:1996), midpoint = "mean") {
+pixel.image <- function(data, title = "", x.range, y.range, midpoint = "mean", break.levels) {
         
+    if (missing("break.levels")) {break.levels <- sd.levels(data, midpoint)}
+    
+    if (missing("x.range")) {x.range <- c(1:nrow(data))}
+        
+    if (missing("y.range")) {y.range <- c(1:ncol(data))}
+    
     image(x.range, y.range, 
           data[x.range, y.range], 
           col = sd.colours(),
-          breaks = sd.levels(data, midpoint),
+          breaks = break.levels,
           main = title,
           asp = T)
 }
 
 
 
-#' Add panel edges to pixel image
+#' Get coordinates of panel edges
 #'
-#' Add lines showing the edges of individual detector panels to a pixel value image (eg. created using \link{pixel.image})
+#' Identify coordinates of individual detector panels, given their dimensions and those of the whole sensor.
 #' @details Each detector panel outputs 128 x 1024 pixels, with some cropping at each edge of the combined image.
+#' @param left.crop Number of pixels cropped from left-hand edge of image. Default is 2.
+#' @param upper.crop Number of pixels cropped from lower edge of image. Default is 20.
 #' @param width Width of each panel, in pixels. Default is 128.
 #' @param height Height of each panel, in pixels. Default is 1024.
-#' @param left.crop Number of pixels cropped from left-hand edge of image. Default is 2.
-#' @param left.crop Number of pixels cropped from lower edge of image. Default is 32.
+#' @param x.dim Width of image returned, in pixels. Default is 1996.
+#' @param y.dim Height of image returned, in pixels. Default is 1996.
 #' @export
 #' @examples
-#' pixel.image(pw.mean)
-#' show.panels()
+#' panels <- panel.edges()
+#' abline(h = panels$midline + 0.5); abline(v = panels$panels + 0.5)
 #' 
 #' 
-show.panels <- function(left.crop = 2, lower.crop = 32, width = 128, height = 1024) {
-    abline(h = height - lower.crop + 0.5)
-    abline(v = (c(1:15)*128 - left.crop + 0.5))
+panel.edges <- function(left.crop = 2, upper.crop = 20, width = 128, height = 1024, x.dim = 1996, y.dim = 1996) {
+    
+    list(y = c(1, y.dim - height + upper.crop + 1, y.dim + 1),
+         x = c(1, c(1:15)* width - left.crop + 1, x.dim + 1))
 }
