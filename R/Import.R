@@ -61,6 +61,25 @@ load.images <- function(img.date, channel, fpath = "./Image-data/", x = 1996, y 
 }
 
 
+#' Load one day's acquisitions from all channels
+#'
+#' Import one day's images from into  1996x1996x20x3 array.
+#' @param img.date Date of images to import, in format yymmdd.
+#' @param fpath Path to top level of stored images. Default is "./Image-data/"
+#' @export
+#' @examples
+#' img.150828 <- load.daily(150828)
+#' 
+#' 
+load.daily <- function(img.date, fpath = "./Image-data/") {
+    m <- array(dim = c(1996, 1996, 20, 3))
+    m[,,,1] <- load.images(img.date, "black")
+    m[,,,2] <- load.images(img.date, "grey")
+    m[,,,3] <- load.images(img.date, "white")
+    return(m)
+}
+
+
 
 #' Load xml profiles of one day's acquisitions from one channel
 #'

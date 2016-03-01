@@ -2,6 +2,7 @@
 
 export(batch.summary)
 export(count.images)
+export(load.daily)
 export(load.images)
 export(load.profiles)
 export(panel.edges)
@@ -14,3 +15,4 @@ export(sd.colours)
 export(sd.levels)
 export(summarise.images)
 export(summarise.profiles)
+export(threshold.pixels)
