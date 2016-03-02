@@ -130,11 +130,27 @@ pixel.image <- function(data, title = "", x.range, y.range, midpoint = "mean", b
 #' @export
 #' @examples
 #' panels <- panel.edges()
-#' abline(h = panels$midline + 0.5); abline(v = panels$panels + 0.5)
 #' 
 #' 
 panel.edges <- function(left.crop = 2, upper.crop = 20, width = 128, height = 1024, x.dim = 1996, y.dim = 1996) {
     
     list(y = c(1, y.dim - height + upper.crop + 1, y.dim + 1),
          x = c(1, c(1:15)* width - left.crop + 1, x.dim + 1))
+}
+
+
+#' Add panel edges to plot
+#'
+#' Mark edges of individual panels in array
+#' @details Each detector panel outputs 128 x 1024 pixels, with some cropping at each edge of the combined image.
+#' @param p List containing y, a named vector of y-coordinates of panel corners, and x, a named vector of x-coordinates of panel corners.
+#' @export
+#' @examples
+#' pixel.image(b.150828)
+#' draw.panels()            # marks specified panel boundaries
+#' 
+#' 
+draw.panels <- function(p = panel.edges()) {
+    abline(h = p$y - 0.5)
+    abline(v = p$x - 0.5)
 }

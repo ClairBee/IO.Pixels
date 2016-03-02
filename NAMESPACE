@@ -2,6 +2,7 @@
 
 export(batch.summary)
 export(count.images)
+export(draw.panels)
 export(load.daily)
 export(load.images)
 export(load.profiles)

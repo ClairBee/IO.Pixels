@@ -28,7 +28,6 @@ Each detector panel outputs 128 x 1024 pixels, with some cropping at each edge o
 }
 \examples{
 panels <- panel.edges()
-abline(h = panels$midline + 0.5); abline(v = panels$panels + 0.5)
 
 
 }
