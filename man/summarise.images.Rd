@@ -4,10 +4,10 @@
 \alias{summarise.images}
 \title{Calculate summary statistics for all images}
 \usage{
-summarise.images(fpath = "./Image-data/")
+summarise.images(fpath = "/home/clair/Documents/Pixels/Image-data/")
 }
 \arguments{
-\item{fpath}{Path to top level of image directory. Default is "./Image-data/"}
+\item{fpath}{Path to top level of image directory. Default is "/home/clair/Documents/Pixels/Image-data/"}
 }
 \value{
 Data frame containing summaries of pixel values: mean and standard deviation, max, min, quartiles and IQR.

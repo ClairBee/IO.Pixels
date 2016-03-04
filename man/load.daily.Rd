@@ -4,12 +4,12 @@
 \alias{load.daily}
 \title{Load one day's acquisitions from all channels}
 \usage{
-load.daily(img.date, fpath = "./Image-data/")
+load.daily(img.date, fpath = "/home/clair/Documents/Pixels/Image-data/")
 }
 \arguments{
 \item{img.date}{Date of images to import, in format yymmdd.}
 
-\item{fpath}{Path to top level of stored images. Default is "./Image-data/"}
+\item{fpath}{Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"}
 }
 \description{
 Import one day's images from into  1996x1996x20x3 array.

@@ -4,10 +4,10 @@
 \alias{summarise.profiles}
 \title{Summarise image profile data}
 \usage{
-summarise.profiles(fpath = "./Image-data/")
+summarise.profiles(fpath = "/home/clair/Documents/Pixels/Image-data/")
 }
 \arguments{
-\item{fpath}{Path to top level of image directory. Default is "./Image-data/"}
+\item{fpath}{Path to top level of image directory. Default is "/home/clair/Documents/Pixels/Image-data/"}
 }
 \value{
 Data frame containing summaries of image profile data.

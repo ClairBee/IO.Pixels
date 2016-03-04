@@ -4,14 +4,18 @@
 \alias{load.profiles}
 \title{Load xml profiles of one day's acquisitions from one channel}
 \usage{
-load.profiles(img.date, channel, fpath = "./Image-data/")
+load.profiles(img.date, channel,
+  fpath = "/home/clair/Documents/Pixels/Image-data/")
 }
 \arguments{
 \item{img.date}{Date of images to import, in format yymmdd.}
 
 \item{channel}{Specify channel to import: black, grey or white.}
 
-\item{fpath}{Path to top level of stored images. Default is "./Image-data/"}
+\item{fpath}{Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"}
+}
+\value{
+Data frame containing all xml profile data for the specified image set.
 }
 \description{
 Support function: import xml profiles of one day's images into a single data frame

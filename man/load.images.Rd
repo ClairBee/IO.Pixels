@@ -4,15 +4,16 @@
 \alias{load.images}
 \title{Load one day's acquisitions from one channel}
 \usage{
-load.images(img.date, channel, fpath = "./Image-data/", x = 1996,
-  y = 1996, z = 20)
+load.images(img.date, channel,
+  fpath = "/home/clair/Documents/Pixels/Image-data/", x = 1996, y = 1996,
+  z = 20)
 }
 \arguments{
 \item{img.date}{Date of images to import, in format yymmdd.}
 
 \item{channel}{Specify channel to import: black, grey or white.}
 
-\item{fpath}{Path to top level of stored images. Default is "./Image-data/"}
+\item{fpath}{Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"}
 
 \item{x}{Width of image. Default is 1996.}
 

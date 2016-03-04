@@ -4,10 +4,10 @@
 \alias{count.images}
 \title{Count available images}
 \usage{
-count.images(fpath = "./Image-data/")
+count.images(fpath = "/home/clair/Documents/Pixels/Image-data/")
 }
 \arguments{
-\item{fpath}{Path to top level of stored images. Default is "./Image-data/"}
+\item{fpath}{Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"}
 }
 \value{
 Data frame containing counts of .tif images in channel subfolders for each date, with image acquisition dates as row names.
