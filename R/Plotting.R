@@ -154,3 +154,23 @@ draw.panels <- function(p = panel.edges()) {
     abline(h = p$y - 0.5)
     abline(v = p$x - 0.5)
 }
+
+
+#' Vector overlay plot
+#'
+#' Base plotting function, specifying type "o" (points plotted over lines), pch = 20, cex = 0.7. Other plotting parameters can be passed as arguments as usual.
+#' @param data Vector of values to plot (eg. column of pixel values)
+#' @param add Boolean: add values to current plot, or start a new plot? Default is F.
+#' @export
+#' @examples
+#' o.plot(b.150828[4,,1])
+#' o.plot(b.150828[5,,1], col = adjustcolor("red", alpha = 0.2), add = T)
+#' 
+#' 
+o.plot <- function(data, add = F, ...) {
+    if (add) {
+        points(data, type = "o", pch = 20, cex = 0.7, ...)
+    } else {
+        plot(data, type = "o", pch = 20, cex = 0.7, ...)
+    }
+}
