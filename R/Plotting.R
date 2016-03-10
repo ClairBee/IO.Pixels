@@ -2,14 +2,14 @@
 #' Set contour plot levels
 #'
 #' Support function: returns a vector of levels to be used in contour plotting, cutting data at mean and +- 0.5, 1, 2, 3 sd.
-#' @param mean Mean value to use as midpoint of levels
-#' @param sd Standard deviation value to determine distance of cutpoints from mean
+#' @param data Matrix of data to plot
+#' @param midpoint String: use mean or median as midpoint? Default is "mean".
 #' @return Vector of calculated levels
 #' @export
 #' @examples
 #'     filled.contour(x = c(1:dim(data)[1]), y = c(1:dim(data)[2]),
-#'     data,
-#'     levels = sd.levels(mean(data), sd(data)))
+#'                    data,
+#'                    levels = sd.levels(data))
 #' 
 #' 
 sd.levels <- function(data, midpoint = "mean") {
@@ -23,6 +23,39 @@ sd.levels <- function(data, midpoint = "mean") {
     c(min(data), m + (c(-3, -2, -1, -0.5, 0, 0.5, 1, 2, 3) * sd(data)), max(data))
 }
 
+
+#' Set contour plot levels
+#'
+#' Support function: returns a vector of levels to be used in contour plotting, cutting data at outlier (lq - 1.5*IQR), lq, 3 even bins between lq and median, median, 3 even bins between median and uq, uq, and outlier (1.5*iqr + uq).
+#' @param data Matrix of data to plot
+#' @return Vector of calculated levels
+#' @export
+#' @examples
+#'     filled.contour(x = c(1:dim(data)[1]), y = c(1:dim(data)[2]),
+#'                    data,
+#'                    levels = iqr.levels(data))
+#' 
+#' 
+iqr.levels <- function(data) {
+    lq <- quantile(data, 0.25)
+    med <- median(data)
+    uq <- quantile(data, 0.75)
+    iqr <- IQR(data)
+    
+    c(0,
+      max(lq - 1.5 * iqr,         # low outliers
+          lq/2),
+      lq,
+      lq + (med - lq) / 3,
+      med - (med - lq) / 3,
+      med,
+      med + (uq - med) / 3,
+      uq - (uq - med) / 3,
+      uq,
+      min(uq + 1.5 * iqr,    # high outliers
+          uq + ((65535-uq) / 2)),
+      65535)
+}
 
 
 #' Colour scheme for contour plot
