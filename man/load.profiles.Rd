@@ -2,15 +2,15 @@
 % Please edit documentation in R/Import.R
 \name{load.profiles}
 \alias{load.profiles}
-\title{Load xml profiles of one day's acquisitions from one channel}
+\title{Load xml profiles of one day's acquisitions from one batch}
 \usage{
-load.profiles(img.date, channel,
+load.profiles(img.date, batch,
   fpath = "/home/clair/Documents/Pixels/Image-data/")
 }
 \arguments{
 \item{img.date}{Date of images to import, in format yymmdd.}
 
-\item{channel}{Specify channel to import: black, grey or white.}
+\item{batch}{Specify batch to import: black, grey or white.}
 
 \item{fpath}{Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"}
 }

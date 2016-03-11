@@ -16,7 +16,7 @@ Data frame containing summaries of image profile data.
 Searches through folder structure, extracts all .xml profiles, and summarises into a data frame.
 }
 \details{
-If NA appears in data frame, the acquisitions for that channel do not all share the same value of that attribute, and should be investigated individually.
+If NA appears in data frame, the acquisitions for that batch do not all share the same value of that attribute, and should be investigated individually.
 }
 \examples{
 df <- summarise.profiles()

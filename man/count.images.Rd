@@ -10,10 +10,10 @@ count.images(fpath = "/home/clair/Documents/Pixels/Image-data/")
 \item{fpath}{Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"}
 }
 \value{
-Data frame containing counts of .tif images in channel subfolders for each date, with image acquisition dates as row names.
+Data frame containing counts of .tif images in batch subfolders for each date, with image acquisition dates as row names.
 }
 \description{
-Searches through folder structure to quickly summarise number of available .tif images from each channel on each day. Assumes files are organised as /Image-data/date/channel/image.tif
+Searches through folder structure to quickly summarise number of available .tif images from each batch on each day. Assumes files are organised as /Image-data/date/batch/image.tif
 }
 \examples{
 image.count <- count.images()

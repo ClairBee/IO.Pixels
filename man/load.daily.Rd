@@ -2,7 +2,7 @@
 % Please edit documentation in R/Import.R
 \name{load.daily}
 \alias{load.daily}
-\title{Load one day's acquisitions from all channels}
+\title{Load one day's acquisitions from all batches}
 \usage{
 load.daily(img.date, fpath = "/home/clair/Documents/Pixels/Image-data/")
 }

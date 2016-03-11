@@ -2,12 +2,12 @@
 % Please edit documentation in R/Thresholding.R
 \name{threshold.pixels}
 \alias{threshold.pixels}
-\title{Load one day's acquisitions from one channel}
+\title{Identify 'bad' pixels}
 \usage{
 threshold.pixels(data, too.bright = 1.5, too.dim = 0.45, noisy = 6)
 }
 \arguments{
-\item{data}{Array containing a sequence of images from a single channel}
+\item{data}{Array containing a sequence of images from a single batch}
 
 \item{too.bright}{Numeric value to use as threshold for underperforming bright pixels: the multiple of median value above which a pixel is deemed to be unacceptably bright. Default is 1.5 x median.}
 
@@ -19,7 +19,7 @@ threshold.pixels(data, too.bright = 1.5, too.dim = 0.45, noisy = 6)
 Data frame containing coordinates and classifications of all underperforming pixels in the given array.
 }
 \description{
-Import one day's images from a single channel into an array. If the function is called by the user, the data is loaded into an object named automatically by the function. If called by another function, will return an array.
+Use thresholds set out in technical manual to identify 'bad' pixels
 }
 \examples{
 bp.b.150828 <- threshold.pixels(b.150828)

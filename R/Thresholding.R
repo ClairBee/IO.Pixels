@@ -1,9 +1,9 @@
 
 
-#' Load one day's acquisitions from one channel
+#' Identify 'bad' pixels
 #'
-#' Import one day's images from a single channel into an array. If the function is called by the user, the data is loaded into an object named automatically by the function. If called by another function, will return an array.
-#' @param data Array containing a sequence of images from a single channel
+#' Use thresholds set out in technical manual to identify 'bad' pixels
+#' @param data Array containing a sequence of images from a single batch
 #' @param too.bright Numeric value to use as threshold for underperforming bright pixels: the multiple of median value above which a pixel is deemed to be unacceptably bright. Default is 1.5 x median.
 #' @param too.dim Numeric value to use as threshold for underperforming dark pixels: the multiple of median value below which a pixel is deemed to be unacceptably bright. Default is 0.45 x median.
 #' @param noisy Numeric value to use as threshold for noisy pixels: the number of median pixel SDs above which a pixel is deemed to be noisy. Default is 6.

@@ -77,7 +77,7 @@ save.summary <- function(data) {
     if (!exists("img.summs")) {
         img.summs <<- data.frame(obj.nm = character(),
                                  img.date = character(),
-                                 channel = character(),
+                                 batch = character(),
                                  g.mean = numeric(),
                                  g.sd = numeric(),
                                  g.lq = numeric(),
@@ -99,11 +99,11 @@ save.summary <- function(data) {
     
     img.date <- substring(obj.nm,3,8)  
     
-    channels <- matrix(c("b", "g", "w", "black", "grey", "white"), ncol = 2, nrow = 3)
-    channel <- channels[which(channels[,1] == substring(obj.nm,1,1)),2]
+    batches <- matrix(c("b", "g", "w", "black", "grey", "white"), ncol = 2, nrow = 3)
+    batch <- batches[which(batches[,1] == substring(obj.nm,1,1)),2]
     
     s <- batch.summary(data)
     
-    img.summs[r, c(1:3)] <<- c(obj.nm, img.date, channel)
+    img.summs[r, c(1:3)] <<- c(obj.nm, img.date, batch)
     img.summs[r,c(4:11)] <<- s
 }

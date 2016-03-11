@@ -1,9 +1,9 @@
 
-#' Load one day's acquisitions from one channel
+#' Load one day's acquisitions from one batch
 #'
-#' Import one day's images from a single channel into an array. If the function is called by the user, the data is loaded into an object named automatically by the function. If called by another function, will return an array.
+#' Import one day's images from a single batch into an array. If the function is called by the user, the data is loaded into an object named automatically by the function. If called by another function, will return an array.
 #' @param img.date Date of images to import, in format yymmdd.
-#' @param channel Specify channel to import: black, grey or white.
+#' @param batch Specify batch to import: black, grey or white.
 #' @param fpath Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"
 #' @param x Width of image. Default is 1996.
 #' @param y Height of image. Default is 1996.
@@ -13,10 +13,10 @@
 #' load.images(150828, "black")   # will create array b.150828
 #' 
 #' 
-load.images <- function(img.date, channel, fpath = "/home/clair/Documents/Pixels/Image-data/", x = 1996, y = 1996, z = 20) {
+load.images <- function(img.date, batch, fpath = "/home/clair/Documents/Pixels/Image-data/", x = 1996, y = 1996, z = 20) {
     
     img.date <- toString(img.date)
-    obj.nm <- paste0(substring(channel,1,1), ".",img.date)
+    obj.nm <- paste0(substring(batch,1,1), ".",img.date)
     global = F
     
     # was function called directly or within another function?
@@ -37,7 +37,7 @@ load.images <- function(img.date, channel, fpath = "/home/clair/Documents/Pixels
     # read each file in turn, assign values into array
     # DON'T iterate over file names - images will not be in the correct order
     for (i in 1:z) {
-        filenm <- paste0(fpath,img.date,"/",channel,"/",channel,"_",rev.date,"_",i,".tif")
+        filenm <- paste0(fpath,img.date,"/",batch,"/",batch,"_",rev.date,"_",i,".tif")
         tmp <- readTIFF(filenm, as.is = T)
         
         # if imported array has more than 2 dimensions, keep only the first
@@ -61,7 +61,7 @@ load.images <- function(img.date, channel, fpath = "/home/clair/Documents/Pixels
 }
 
 
-#' Load one day's acquisitions from all channels
+#' Load one day's acquisitions from all batches
 #'
 #' Import one day's images from into  1996x1996x20x3 array.
 #' @param img.date Date of images to import, in format yymmdd.
@@ -81,11 +81,11 @@ load.daily <- function(img.date, fpath = "/home/clair/Documents/Pixels/Image-dat
 
 
 
-#' Load xml profiles of one day's acquisitions from one channel
+#' Load xml profiles of one day's acquisitions from one batch
 #'
 #' Support function: import xml profiles of one day's images into a single data frame
 #' @param img.date Date of images to import, in format yymmdd.
-#' @param channel Specify channel to import: black, grey or white.
+#' @param batch Specify batch to import: black, grey or white.
 #' @param fpath Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"
 #' @return Data frame containing all xml profile data for the specified image set.
 #' @export
@@ -93,11 +93,11 @@ load.daily <- function(img.date, fpath = "/home/clair/Documents/Pixels/Image-dat
 #' b.150828.xml <- load.profiles(150828, "black")
 #' 
 #' 
-load.profiles <- function(img.date, channel, fpath = "/home/clair/Documents/Pixels/Image-data/") {
+load.profiles <- function(img.date, batch, fpath = "/home/clair/Documents/Pixels/Image-data/") {
     
     img.date <- toString(img.date)
     
-    fpath <- paste(fpath, img.date, "/", channel, "/", sep = "")
+    fpath <- paste(fpath, img.date, "/", batch, "/", sep = "")
     files <- list.files(fpath, pattern = "\\.xml$")
     
     xml.data <- list()
@@ -135,7 +135,7 @@ load.profiles <- function(img.date, channel, fpath = "/home/clair/Documents/Pixe
 #' Summarise image profile data
 #'
 #' Searches through folder structure, extracts all .xml profiles, and summarises into a data frame.
-#' @details If NA appears in data frame, the acquisitions for that channel do not all share the same value of that attribute, and should be investigated individually.
+#' @details If NA appears in data frame, the acquisitions for that batch do not all share the same value of that attribute, and should be investigated individually.
 #' @param fpath Path to top level of image directory. Default is "/home/clair/Documents/Pixels/Image-data/"
 #' @return Data frame containing summaries of image profile data.
 #' @export
@@ -159,13 +159,13 @@ summarise.profiles <- function(fpath = "/home/clair/Documents/Pixels/Image-data/
         # read each folder in turn
         for (i in 1:d) {
             
-            channels <- tolower(list.dirs(paste(fpath, folders[i],"/", sep = ""), full.names = F, recursive = F))
+            batches <- tolower(list.dirs(paste(fpath, folders[i],"/", sep = ""), full.names = F, recursive = F))
             
-            # read each channel in turn
-            for (j in 1:length(channels)) {
+            # read each batch in turn
+            for (j in 1:length(batches)) {
                 
                 # extract data frame of xml data (may not be the same format for each day!)
-                p <- load.profiles(folders[i], channels[j], fpath)
+                p <- load.profiles(folders[i], batches[j], fpath)
                 
                 # for numeric columns, check that min == max; otherwise, replace with NA
                 for (k in c(1:ncol(p))[sapply(p, class) == "numeric"]) {
@@ -174,14 +174,14 @@ summarise.profiles <- function(fpath = "/home/clair/Documents/Pixels/Image-data/
                     }
                 }
                 xml.summ[[length(xml.summ) + 1]] <- cbind(date = folders[i],
-                                                          channel = channels[j],
+                                                          batch = batches[j],
                                                           frames = nrow(p),
                                                           p[1,])
             }
         }
         df <- rbind.fill(xml.summ)
         df$date <- as.character(df$date)
-        df$channel <- as.character(df$channel)
+        df$batch <- as.character(df$batch)
         df$frames <- as.integer(df$frames)
         return(df)
     }
@@ -202,7 +202,7 @@ summarise.profiles <- function(fpath = "/home/clair/Documents/Pixels/Image-data/
 summarise.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/") {
     
     df <- data.frame(img.date = character(),
-                     channel = character(),
+                     batch = character(),
                      
                      mean = numeric(),
                      sd = numeric(),
@@ -220,16 +220,16 @@ summarise.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/")
     # read each folder in turn
     for (i in 1:length(folders)) {
         
-        channels <- tolower(list.dirs(paste(fpath, folders[i],"/", sep = ""), full.names = F, recursive = F))
+        batches <- tolower(list.dirs(paste(fpath, folders[i],"/", sep = ""), full.names = F, recursive = F))
         
-        # read each channel in turn
-        for (j in 1:length(channels)) {
+        # read each batch in turn
+        for (j in 1:length(batches)) {
             
             r <- nrow(df) + 1
-            data <- load.images(folders[i], channels[j], fpath)
+            data <- load.images(folders[i], batches[j], fpath)
             summ <- batch.summary(data)
             
-            df[r,c(1:2)] <- c(folders[i], channels[j])
+            df[r,c(1:2)] <- c(folders[i], batches[j])
             df[r,c(3:4)] <- summ[[1]]
             df[r,c(5:10)] <- summ[[2]]
         }
@@ -241,9 +241,9 @@ summarise.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/")
 
 #' Count available images
 #'
-#' Searches through folder structure to quickly summarise number of available .tif images from each channel on each day. Assumes files are organised as /Image-data/date/channel/image.tif
+#' Searches through folder structure to quickly summarise number of available .tif images from each batch on each day. Assumes files are organised as /Image-data/date/batch/image.tif
 #' @param fpath Path to top level of stored images. Default is "/home/clair/Documents/Pixels/Image-data/"
-#' @return Data frame containing counts of .tif images in channel subfolders for each date, with image acquisition dates as row names.
+#' @return Data frame containing counts of .tif images in batch subfolders for each date, with image acquisition dates as row names.
 #' @export
 #' @examples
 #' image.count <- count.images()
@@ -267,7 +267,7 @@ count.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/") {
             img.date <- folders[i]
             rev.date <- paste(substr(img.date,5,6),substr(img.date,3,4),substr(img.date,1,2), sep = "")
             
-            # check folder for each channel in turn, get number of .tif files
+            # check folder for each batch in turn, get number of .tif files
             b <- length(list.files(paste(fpath, folders[i],"/black/", sep = ""), pattern = "\\.tif$"))
             g <- length(list.files(paste(fpath, folders[i],"/grey/", sep = ""), pattern = "\\.tif$"))
             w <- length(list.files(paste(fpath, folders[i],"/white/", sep = ""), pattern = "\\.tif$"))
