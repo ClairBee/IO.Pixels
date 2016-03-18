@@ -132,20 +132,15 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 #' pixel.image(pw.mean)
 #' 
 #' 
-pixel.image <- function(data, title = "", x.range, y.range, midpoint = "mean", break.levels) {
+pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), midpoint = "mean", break.levels = sd.levels(data, "mean"), ...) {
         
-    if (missing("break.levels")) {break.levels <- sd.levels(data, midpoint)}
-    
-    if (missing("x.range")) {x.range <- c(1:nrow(data))}
-        
-    if (missing("y.range")) {y.range <- c(1:ncol(data))}
-    
     image(x.range, y.range, 
           data[x.range, y.range], 
           col = sd.colours(),
           breaks = break.levels,
           main = title,
-          asp = T)
+          asp = T, 
+          ...)
 }
 
 

@@ -4,8 +4,9 @@
 \alias{pixel.image}
 \title{Display pixel values as image}
 \usage{
-pixel.image(data, title = "", x.range, y.range, midpoint = "mean",
-  break.levels)
+pixel.image(data, title = "", x.range = c(1:nrow(data)),
+  y.range = c(1:ncol(data)), midpoint = "mean",
+  break.levels = sd.levels(data, "mean"), ...)
 }
 \arguments{
 \item{data}{2-dimensional matrix containing values to be plotted}
