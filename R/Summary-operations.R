@@ -46,9 +46,14 @@ pixelwise.sd <- function(data) {
 #' 
 batch.summary <- function(data) {
     
+    pw.sd <- pixelwise.sd(data)
+    pw.rng <- apply(data, c(1, 2), max) - apply(data, c(1, 2), min)
+    
     # output vector of summary statistics
     list(c(mean = mean(data),
-           sd = sd(data)),
+           sd = sd(data),
+           pw.sd = mean(pw.sd),
+           pw.rng = mean(pw.rng)),
          c(min = min(data),
            lq = quantile(data,0.25),
            median = median(data),

@@ -229,9 +229,9 @@ summarise.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/")
             data <- load.images(folders[i], batches[j], fpath)
             summ <- batch.summary(data)
             
-            df[r,c(1:2)] <- c(folders[i], batches[j])
-            df[r,c(3:4)] <- summ[[1]]
-            df[r,c(5:10)] <- summ[[2]]
+            df[r, c(1:2)] <- c(folders[i], batches[j])
+            df[r, c(3:6)] <- summ[[1]]
+            df[r, c(7:12)] <- summ[[2]]
         }
     }
     return(df)
