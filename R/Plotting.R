@@ -132,7 +132,8 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 #' pixel.image(pw.mean)
 #' 
 #' 
-pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), midpoint = "mean", break.levels = sd.levels(data, "mean"), ...) {
+pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), 
+                        midpoint = "mean", break.levels = sd.levels(data, "mean"), panels = F, ...) {
         
     image(x.range, y.range, 
           data[x.range, y.range], 
@@ -141,6 +142,8 @@ pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c
           main = title,
           asp = T, 
           ...)
+    
+    if (panels) draw.panels()
 }
 
 
@@ -201,4 +204,30 @@ o.plot <- function(data, add = F, ...) {
     } else {
         plot(data, type = "o", pch = 20, cex = 0.7, ...)
     }
+}
+
+
+
+#' Histogram plot with SD levels shown
+#' 
+#' Producs a histogram with coloured bars at the bottom showing scale used. Defaults can be used to show legend for plots produced using \link{\code{pixel.image}}.
+#' @param data Array of numbers to be plotting in histogram
+#' @param scale Vector of scale cutpoints. Default is \link{\code{sd.levels()}}.
+#' @param scale.colours Vector of scale colours. Default it \link{\code{sd.lcolours()}}
+#' @param xlim Vector of lower and upper x-limits. If not provided, will use central 95% of normal distribution with mean & sd of observed data.
+#' @export
+#' @examples
+#' pixel.image(b.150828)
+#' scale.hist(b.150828)
+s.hist <- function(data, scale = sd.levels(data), scale.colours = sd.colours(), xlim, ...) {
+    if (missing(xlim)) {
+        xlim <- c(floor(qnorm(0.025, mean(data), sd(data))/10)*10,
+                  ceiling(qnorm(0.975, mean(data), sd(data))/10)*10)
+    }
+    
+    hist(data, breaks = "fd", xlim = xlim, ...)
+    
+    # add colours to indicate scale of pixel map
+    cl <- cut(xlim[1]:xlim[2], scale)
+    points(xlim[1]:xlim[2], rep(-600, length(xlim[1]:xlim[2])), pch = 15, col = scale.colours[cl])
 }

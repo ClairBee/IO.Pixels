@@ -6,7 +6,7 @@
 \usage{
 pixel.image(data, title = "", x.range = c(1:nrow(data)),
   y.range = c(1:ncol(data)), midpoint = "mean",
-  break.levels = sd.levels(data, "mean"), ...)
+  break.levels = sd.levels(data, "mean"), panels = F, ...)
 }
 \arguments{
 \item{data}{2-dimensional matrix containing values to be plotted}
