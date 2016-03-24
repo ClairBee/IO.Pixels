@@ -24,6 +24,33 @@ fit.circular.lm <- function(image, centre = c(1023.5, 992.5)) {
 }
 
 
+#' Linear regression over distance from centre, including polynomial terms of z
+#' 
+#' Fit a circular spot model with linear gradients to the image, including polynomial terms of z as explanatory variables
+#' @param image Single-layer (1996x1996) array image to be fitted.
+#' @param o Order of polynomial to include. Default is 2
+#' @param centre Vector of coordinates of centre of spot. Default is centre of uncropped detector, c(1023.5, 992.5)
+#' @return Linear model fitted to given image
+#' @export
+#' @examples
+#' circ.poly.lm <- fit.circular.lm.poly(pw.m)
+#' circ.poly.res <- matrix(circ.poly.lm$residuals, ncol = 1996)
+#' pixel.image(circ.poly.res)
+#' 
+fit.circular.lm.poly <- function(image, o = 2, centre = c(1023.5, 992.5)) {
+    
+    # get distances from spot centre
+    z.dist <- merge(x = c(1:dim(image)[1]), y = c(1:dim(image)[2]))
+    z.dist$z <- sqrt((z.dist$x - centre[1])^2 + (z.dist$y - centre[2])^2)
+    
+    # distance from centre vs pixel values
+    zz <- cbind(melt(image), z.dist)[,c(4,5,6,3)]
+    
+    # fit & return linear model
+    return(lm(value ~ poly(z, o), zz))
+}
+
+
 #' Per-panel linear regression
 #' 
 #' Fit a linear gradient over each of the 32 subpanels within the image
@@ -49,6 +76,35 @@ fit.panel.lm <- function(image) {
     
     list(fitted.values = join.panels(smoothed.panels), models = coeffs)
 }
+
+
+#' Per-panel linear regression, with polynomial terms
+#' 
+#' Fit a linear gradient over each of the 32 subpanels within the image, including polynomial terms of x and y.
+#' @param image Single-layer array image (1996x1996) to be fitted.
+#' @param o Order of polynomial to include. Default is 2
+#' @return List containing a matrix of fitted values, and a matrix of model coefficients for each panel.
+#' @export
+#' @examples
+#' panel.lm.2 <- fit.panel.lm.poly(circ.res.2, o = 2)
+#' panel.res.2 <- circ.res.2 - panel.lm.2$fitted.values
+#' pixel.image(panel.res.2)
+fit.panel.lm.poly <- function(image, o = 2) {
+    sp <- subpanels(image)
+    
+    coeffs <- array(dim = c(32, 5),
+                    dimnames = list(dimnames(sp)[[3]], c("offset", "x","x^2", "y", "y^2")))
+    smoothed.panels <- array(dim = c(128, 1024, 32))
+    
+    for (s in 1:32) {
+        lm <- lm(value ~ poly(X1,o) + poly(X2,o), data = melt(sp[ , , s]))
+        coeffs[s,] <- coef(lm)
+        smoothed.panels[,,s] <- predict(lm, melt(sp[ , , s]))
+    }
+    
+    list(fitted.values = join.panels(smoothed.panels), models = coeffs)
+}
+
 
 
 #' Per-column loess smoothing
