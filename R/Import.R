@@ -281,4 +281,24 @@ count.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/") {
 }
 
 
+#' Quickly load files
+#'
+#' Load all pixelwise summaries and bad pixel map in one step.
+#' @param fpath Path to top level of stored images. Default is "./Other-data/"
+#' @details Imports pixelwise mean and SD for all files, and bad pixel map
+#' @export
+#' @examples
+#' quick.load()
+#' 
+load.pixel.maps <- function(fpath = "./Other-data/") {
+    pw.w <<- readRDS(paste0(fpath, "Pixelwise-means-white.rds"))
+    pw.g <<- readRDS(paste0(fpath, "Pixelwise-means-grey.rds"))
+    pw.b <<- readRDS(paste0(fpath, "Pixelwise-means-black.rds"))
+    
+    pw.sd.w <<- readRDS(paste0(fpath, "Pixelwise-sds-white.rds"))
+    pw.sd.g <<- readRDS(paste0(fpath, "Pixelwise-sds-grey.rds"))
+    pw.sd.b <<- readRDS(paste0(fpath, "Pixelwise-sds-black.rds"))
+    
+    bpm <<- read.csv(paste0(fpath, "BadPixelMap-160314.csv"), as.is = T)
+}
 
