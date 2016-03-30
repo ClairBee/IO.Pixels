@@ -3,6 +3,8 @@
 export(batch.summary)
 export(bp.by.res.nmad)
 export(bp.by.res.sd)
+export(bp.lowess.johnson)
+export(bp.lowess.quantiles)
 export(count.images)
 export(draw.panels)
 export(fit.circular.lm)
