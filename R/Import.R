@@ -288,7 +288,7 @@ count.images <- function(fpath = "/home/clair/Documents/Pixels/Image-data/") {
 #' @details Imports pixelwise mean and SD for all files, and bad pixel map
 #' @export
 #' @examples
-#' quick.load()
+#' load.pixel.maps()
 #' 
 load.pixel.maps <- function(fpath = "./Other-data/") {
     pw.w <<- readRDS(paste0(fpath, "Pixelwise-means-white.rds"))
@@ -302,3 +302,28 @@ load.pixel.maps <- function(fpath = "./Other-data/") {
     bpm <<- read.csv(paste0(fpath, "BadPixelMap-160314.csv"), as.is = T)
 }
 
+
+#' Create array of all pixelwise means
+#'
+#' Load all pixelwise mean summaries into a single labelled array.
+#' @param fpath Path to top level of stored images. Default is "./Other-data/"
+#' @export
+#' @examples
+#' load.pixel.means()
+#' 
+load.pixel.means <- function(fpath = "./Other-data/") {
+    
+    # load single image first to get dim names
+    pw.b <- readRDS(paste0(fpath, "Pixelwise-means-black.rds"))
+    
+    pw.m <- array(dim = c(1996, 1996, 3, 11),
+                  dimnames = list(NULL, NULL, c("black", "grey", "white"), dimnames(pw.b)[[3]]))
+    
+    # load all pixelwise means into single array
+    pw.m[,,"black",] <- pw.b
+    pw.m[,,"grey",] <- readRDS(paste0(fpath, "Pixelwise-means-grey.rds"))
+    pw.m[,,"white",] <- readRDS(paste0(fpath, "Pixelwise-means-white.rds"))
+    
+    # assign in global environment
+    pw.m <<- pw.m
+}

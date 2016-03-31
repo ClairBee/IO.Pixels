@@ -16,7 +16,7 @@ Load all pixelwise summaries and bad pixel map in one step.
 Imports pixelwise mean and SD for all files, and bad pixel map
 }
 \examples{
-quick.load()
+load.pixel.maps()
 
 }
 
