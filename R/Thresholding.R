@@ -1,5 +1,30 @@
 
 
+#' Create map of 'absolute' bad pixels
+#'
+#' Create a data frame containing coordinates of 'hot' and 'dead' pixels in each image batch for a given date.
+#' 
+#' 'Hot' pixels are always on, with a pixelwise mean value of 65535 across all 20 images. 
+#' 'Dead' pixels are always off, with a pixelwise mean value of 0 across all 20 images. 
+#' 
+#' @details Requires objects \code{pw.b}, \code{pw.g} and \code{pw.g}, as created by \link{\code{load.pixel.maps}}.
+#' @param img.date Integer or string giving date to be 
+#' @return Data frame containing coordinates and classifications of all absolutely defective pixels.
+#' @export
+#' @examples
+#' bp.160314 <- reset.bp(160314)
+#' bp.160314 <- reset.bp("160314")          # gives same result
+#' 
+reset.bp <- function(img.dt) {
+    img.dt <- toString(img.dt)
+    rbind(data.frame(which(pw.b[,,img.dt] == 0, arr.ind = T), src = "black", type = "dead"),
+          data.frame(which(pw.b[,,img.dt] == 65535, arr.ind = T), src = "black", type = "hot"),
+          data.frame(which(pw.g[,,img.dt] == 0, arr.ind = T), src = "grey", type = "dead"),
+          data.frame(which(pw.g[,,img.dt] == 65535, arr.ind = T), src = "grey", type = "hot"),
+          data.frame(which(pw.w[,,img.dt] == 0, arr.ind = T), src = "white", type = "dead"),
+          data.frame(which(pw.w[,,img.dt] == 65535, arr.ind = T), src = "white", type = "hot"))
+}
+
 #' Identify 'bad' pixels
 #'
 #' Use thresholds set out in technical manual to identify 'bad' pixels
