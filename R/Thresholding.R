@@ -17,12 +17,23 @@
 #' 
 reset.bp <- function(img.dt) {
     img.dt <- toString(img.dt)
-    rbind(data.frame(which(pw.b[,,img.dt] == 0, arr.ind = T), src = "black", type = "dead"),
-          data.frame(which(pw.b[,,img.dt] == 65535, arr.ind = T), src = "black", type = "hot"),
-          data.frame(which(pw.g[,,img.dt] == 0, arr.ind = T), src = "grey", type = "dead"),
-          data.frame(which(pw.g[,,img.dt] == 65535, arr.ind = T), src = "grey", type = "hot"),
-          data.frame(which(pw.w[,,img.dt] == 0, arr.ind = T), src = "white", type = "dead"),
-          data.frame(which(pw.w[,,img.dt] == 65535, arr.ind = T), src = "white", type = "hot"))
+    
+    if (exists("pw.m")) {
+        bp <- rbind(data.frame(which(pw.m[ , , "black", img.dt] == 0, arr.ind = T), src = "black", type = "dead"),
+                    data.frame(which(pw.m[ , , "black", img.dt] == 65535, arr.ind = T), src = "black", type = "hot"),
+                    data.frame(which(pw.m[ , , "grey", img.dt] == 0, arr.ind = T), src = "grey", type = "dead"),
+                    data.frame(which(pw.m[ , , "grey", img.dt] == 65535, arr.ind = T), src = "grey", type = "hot"),
+                    data.frame(which(pw.m[ , , "white", img.dt] == 0, arr.ind = T), src = "white", type = "dead"),
+                    data.frame(which(pw.m[ , , "white", img.dt] == 65535, arr.ind = T), src = "white", type = "hot"))
+    } else {
+        bp <- rbind(data.frame(which(pw.b[ , , img.dt] == 0, arr.ind = T), src = "black", type = "dead"),
+                    data.frame(which(pw.b[ , , img.dt] == 65535, arr.ind = T), src = "black", type = "hot"),
+                    data.frame(which(pw.g[ , , img.dt] == 0, arr.ind = T), src = "grey", type = "dead"),
+                    data.frame(which(pw.g[ , , img.dt] == 65535, arr.ind = T), src = "grey", type = "hot"),
+                    data.frame(which(pw.w[ , , img.dt] == 0, arr.ind = T), src = "white", type = "dead"),
+                    data.frame(which(pw.w[ , , img.dt] == 65535, arr.ind = T), src = "white", type = "hot"))
+    }
+    bp
 }
 
 #' Identify 'bad' pixels

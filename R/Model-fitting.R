@@ -136,3 +136,29 @@ lowess.per.column <- function(image, span = 1/15) {
     
     return(smoo)
 }
+
+
+#' Return fitted values from panelwise coefficients
+#' 
+#' Given a matrix of coefficients such as from \link{\code{fit.panel.lm}}, return a list containing values fitted to the panel coordinates.
+#' @param coeffs 32 x 3 matrix of coefficients (offset, x, y) for each panel
+#' @return List containing 1996x1996 matrix of per-panel offset values and 1996x1996 matrix of per-panel gradient values.
+#' @export
+#' @examples
+#' panel.lm <- fit.panel.lm(circ.res)
+#' zz <- fit.panels(panel.lm$models)
+#' pixel.image(zz$grad)
+fit.panels <- function(coeffs) {
+    
+    offset.p <- array(dim = c(128, 1024, 32))
+    grad.p <- array(dim = c(128, 1024, 32))
+    
+    for (i in 1:32) {
+        offset.p[,,i] <- coeffs[i,"offset"]
+        tmp <- melt(grad.p[,,i])
+        grad.p[,,i] <- (coeffs[i,"x"] * tmp$X1) + (coeffs[i,"y"] * tmp$X2)
+    }
+    
+    list(offset = join.panels(offset.p),
+         grad = join.panels(grad.p))
+}

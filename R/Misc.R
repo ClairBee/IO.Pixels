@@ -25,3 +25,75 @@ sample.healthy <- function(bad.pixels, n = nrow(bad.pixels)) {
     cbind(x = s %/% 1996 + 1, y = s %% 1996 + 1)
 }
 
+
+
+#' Combine two bad pixel maps
+#'
+#' Merge two data frames of bad pixels into one single list of coordinates, with source map and (where possible) error type marked.
+#'
+#' NB. Currently only set up to compare 'official' (old) pixel map with new one. Should update this.
+#' @param new.map Data frame (as created using \link{\code{reset.bp}}) containing coordinates and types of pixels.
+#' @param old.map Data frame (eg. official bad pixel map) containing coordinates and types of pixels.
+#' @return Data frame containing row and column coordinates of bad pixels, factor giving type of bad pixel, and factor noting which map the pixel was found in (old, new, or both)
+#' @export
+#' @examples
+#' matched <- combine.maps(bp, bpm)
+combine.maps <- function(new.map, old.map) {
+    
+    match <- merge(data.frame(new.map[!duplicated(new.map[,1:2]), c("row", "col", "type")],
+                      map1 = "new"),
+                 data.frame(old.map, map2 = "old"),
+                 by.x = c(1:2), by.y = c(1:2), all = T)
+    
+    match$map <- apply(match[,c("map1", "map2")], 1, function(x) paste(na.omit(x), collapse = ""))
+    match$map[match$map == "newold"] <- "both" 
+    match$map <- factor(match$map, levels = c("new", "both", "old"))
+    
+    match[order(match$map), c("row", "col", "type", "map")]
+}
+
+
+
+#' Plot a combined pixel map
+#'
+#' Compare bad pixels identified by two different pixel maps by plotting their values.
+#' @param map Data frame (as created using \link{\code{combine.maps}}) containing coordinates and sources of pixels.
+#' @param img.date Integer or string giving acquisition date for which bad pixels are to be plotted.
+#' @param colour Which image batch should be plotted? Default is "all", which will plot all three sequentially.
+#' @export
+#' @examples
+#' matched <- combine.maps(bp, bpm)
+#' plot.map.comparison(matched)
+plot.map.comparison <- function(map, img.date, colour = "all") {
+    
+    # get random sample of 'healthy' pixels for comparison
+    pp <- sample.healthy(map)
+    
+    img.date <- toString(img.date)
+    
+    if (colour == "all") {
+        
+        for (colour in c("black", "grey", "white")) {
+            plot(pw.m[,, colour, img.date][pp], pch = 20, col = adjustcolor("gold", alpha = 0.2),
+                 ylim = c(0, 65535), ylab = "Mean pixel value over 20 images", xlab = "Pixel index",
+                 main = paste0("Bad pixels - ", colour, " images, ", img.date))
+            
+            points(pw.m[,, colour, img.date][as.matrix(map[,1:2])], pch = 20, 
+                   col = adjustcolor(c("chartreuse3", "slateblue1", "red")[map$map], alpha = 0.5))
+            
+            legend("topleft", legend = c(levels(map$map), "'healthy' pixels"), pch = 20,
+                   col =  adjustcolor(c("chartreuse3", "slateblue1", "red", "gold"), alpha = 0.5), bty = "n")
+        }
+    } else {
+        
+        plot(pw.m[,, colour, img.date][pp], pch = 20, col = adjustcolor("gold", alpha = 0.2),
+             ylim = c(0, 65535), ylab = "Mean pixel value over 20 images", xlab = "Pixel index",
+             main = paste0("Bad pixels - ", colour, " images, ", img.date))
+        
+        points(pw.m[,, colour, img.date][as.matrix(map[,1:2])], pch = 20, 
+               col = adjustcolor(c("chartreuse3", "slateblue1", "red")[bp.matched$map], alpha = 0.5))
+        
+        legend("topleft", legend = c(levels(bp.matched$map), "'healthy' pixels"), pch = 20,
+               col =  adjustcolor(c("chartreuse3", "slateblue1", "red", "gold"), alpha = 0.5), bty = "n")
+    }
+}
