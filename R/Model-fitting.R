@@ -13,7 +13,7 @@
 fit.circular.lm <- function(image, centre = c(1023.5, 992.5)) {
     
     # get distances from spot centre
-    z.dist <- cbind(x = c(1:1996^2) %/% 1996 + 1, y = c(1:1996^2) %% 1996)
+    z.dist <- data.frame(x = c(1:1996^2) %/% 1996 + 1, y = c(1:1996^2) %% 1996)
     z.dist$z <- sqrt((z.dist$x - centre[1])^2 + (z.dist$y - centre[2])^2)
     
     # distance from centre vs pixel values
@@ -40,7 +40,7 @@ fit.circular.lm <- function(image, centre = c(1023.5, 992.5)) {
 fit.circular.lm.poly <- function(image, o = 2, centre = c(1023.5, 992.5)) {
     
     # get distances from spot centre
-    z.dist <- cbind(x = c(1:1996^2) %/% 1996 + 1, y = c(1:1996^2) %% 1996)
+    z.dist <- data.frame(x = c(1:1996^2) %/% 1996 + 1, y = c(1:1996^2) %% 1996)
     z.dist$z <- sqrt((z.dist$x - centre[1])^2 + (z.dist$y - centre[2])^2)
     
     # distance from centre vs pixel values
