@@ -4,23 +4,26 @@
 \alias{bp.parametric.quantiles}
 \title{Identify 'bad' pixels using quantiles of residuals after parametric fitting}
 \usage{
-bp.parametric.quantiles(img.date, batch, circ.o = 2, panel.o = 1,
-  lq = 0.001, uq = 0.999, dist = 1.5, details = F)
+bp.parametric.quantiles(img.date, batch, spot.order = 2,
+  panel.terms = "x + y", lq = 0.001, uq = 0.999, dist = 1.5,
+  robust = F, details = F)
 }
 \arguments{
 \item{img.date}{Integer/string specifying image date to be imported}
 
 \item{batch}{String specifying colour batch to be imported (black, grey or white)}
 
-\item{circ.o}{Integer (or NA if no spot model is required) specifying order of polynomial model to fit to circular spot.}
+\item{spot.order}{Integer (or NA if no spot model is required) specifying order of polynomial model to fit to circular spot.}
 
-\item{panel.o}{Integer (or NA if no per-panel model is required) specifying order of polynomial model to fit to panel X and Y coordinates.}
+\item{panel.terms}{String specifying formula to apply in linear regression over panel coordinates.}
 
 \item{lq}{Lower quartile at which to start looking for 'outliers'. Default is 0.001}
 
 \item{uq}{Upper quartile at which to start looking for 'outliers'. Default is 0.999}
 
 \item{dist}{Multiples of IQR away from lq/uq at which a point is classified as 'bad'.}
+
+\item{robust}{Boolean: use robust model fitting (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).}
 
 \item{details}{Boolean: return lists of identified 'bad pixels' (T) or only summary (F)? Default is F.}
 }
@@ -32,7 +35,7 @@ Requires that pixelwise mean files are already loaded, as by \link{\code{load.pi
 }
 \examples{
 load.pixel.means()
-zz <- rbind(bp.parametric.quantiles(160314, "white"),
+zz <- rbind(bp.parametric.quantiles(160314, "white", ),
             bp.lowess.quantiles(160314, "white"))
 
 }
