@@ -97,3 +97,30 @@ plot.map.comparison <- function(map, img.date, colour = "all") {
                col =  adjustcolor(c("chartreuse3", "slateblue1", "red", "gold"), alpha = 0.5), bty = "n")
     }
 }
+
+
+#' Johnson Q-Q plot
+#'
+#' Produce a Q-Q plot of data quantiles vs Johnson distribution quantiles, with quantiles of interest marked.
+#' @param data Image array of 1996 x 1996 pixels
+#' @param quantiles Vector of quantiles to plot; default is c(1:999)/1000
+#' @param grid.quantiles Vector of quantiles of particular interest, to mark with gridlines
+#' @param title String containing plot title. Default is "Johnson Q-Q plot".
+#' @param ... Additional plotting arguments
+#' @export
+#' @examples
+#' Johnson.QQ(pw.sd[,,"black", "150828"])
+Johnson.QQ <- function(data, quantiles = c(1:999)/1000, grid.quantiles = c(0.01, 0.99), title = "Johnson Q-Q plot", ...) {
+    
+    jf <- JohnsonFit(data, moment = "quant")
+    
+    plot(qJohnson(quantiles, jf), quantile(data, quantiles), pch = 20, asp = T,
+         ylab = "Observed quantile", xlab = "Johnson quantile", main = title, ...)
+    abline(0,1, col = "red", lty = 2)
+    
+    abline(h = quantile(data, grid.quantiles), col = "skyblue", lty = 2)
+    abline(v = qJohnson(grid.quantiles, jf), col = "skyblue", lty = 2)
+    
+    legend("topleft", cex = 0.7, title = "Gridlines: ", legend = paste0("Q", grid.quantiles * 100), lty = 2, col = "skyblue")
+}
+

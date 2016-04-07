@@ -327,3 +327,29 @@ load.pixel.means <- function(fpath = "./Other-data/") {
     # assign in global environment
     pw.m <<- pw.m
 }
+
+
+#' Create array of all pixelwise SDs
+#'
+#' Load all pixelwise standard deviation matrices into a single labelled array.
+#' @param fpath Path to top level of stored images. Default is "./Other-data/"
+#' @export
+#' @examples
+#' load.pixel.sds()
+#' 
+load.pixel.sds <- function(fpath = "./Other-data/") {
+    
+    # load single image first to get dim names
+    pw.b <- readRDS(paste0(fpath, "Pixelwise-sds-black.rds"))
+    
+    pw.sd <- array(dim = c(1996, 1996, 3, 11),
+                  dimnames = list(NULL, NULL, c("black", "grey", "white"), dimnames(pw.b)[[3]]))
+    
+    # load all pixelwise means into single array
+    pw.sd[,,"black",] <- pw.b
+    pw.sd[,,"grey",] <- readRDS(paste0(fpath, "Pixelwise-sds-grey.rds"))
+    pw.sd[,,"white",] <- readRDS(paste0(fpath, "Pixelwise-sds-white.rds"))
+    
+    # assign in global environment
+    pw.sd <<- pw.sd
+}
