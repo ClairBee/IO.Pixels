@@ -2,27 +2,41 @@
 % Please edit documentation in R/Model-fitting.R
 \name{panel.lm}
 \alias{panel.lm}
-\title{Per-panel linear regression}
+\title{Linear regression over distance from centre}
 \usage{
-panel.lm(image, terms = "x + y", robust = F)
+panel.lm(image, terms = "x + y", robust = F, left.pad = 2,
+  upper.pad = 20)
 }
 \arguments{
-\item{image}{Single-layer array image (1996x1996) to be fitted.}
+\item{image}{Single-layer (1996x1996) array image to be fitted.}
 
 \item{terms}{String specifying terms to be fitted to each subpanel. Default is "x + y", fitting a linear model to the x and y coordinates of each subpanel without considering interactions.}
 
 \item{robust}{Boolean: use robust model fitting (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).}
+
+\item{order}{Order of polynomial to include. Default is 2}
+
+\item{centre}{Vector of coordinates of centre of spot. Default is centre of uncropped detector, c(1023.5, 992.5)}
+
+\item{image}{Single-layer array image (1996x1996) to be fitted.}
+
+\item{robust}{Boolean: use robust model fitting (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).}
 }
 \value{
+Linear model fitted to given image
+
 List containing the terms applied, a matrix of fitted values, and a matrix of model coefficients for each panel.
 }
 \description{
-Fit a linear gradient over each of the 32 subpanels within the image
+Fit a circular spot model with linear gradients to the image, including polynomial terms of z as explanatory variables
 }
 \examples{
-panel.lm <- panel.lm(circ.res, "poly(x, 2) + y")    # finds coefficients of intercept, x, x^2, y.
-panel.lm <- panel.lm(circ.res, "y")                 # finds coefficients of intercept and y.
-panel.res <- circ.res - panel.lm$fitted.values
-pixel.image(panel.res)
+circ.lm <- spot.lm(pw.m)
+circ.res <- matrix(circ.lm$residuals, ncol = 1996)
+pixel.image(circ.res)
+
+Per-panel linear regression
+
+Fit a linear gradient over each of the 32 subpanels within the image
 }
 
