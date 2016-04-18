@@ -86,30 +86,15 @@ he.spot.lm <- function(image, n = 2, order = 2, centre = c(1023.5, 992.5), robus
 }
 
 
-#' Linear regression over distance from centre
-#' 
-#' Fit a circular spot model with linear gradients to the image, including polynomial terms of z as explanatory variables
-#' @param image Single-layer (1996x1996) array image to be fitted.
-#' @param order Order of polynomial to include. Default is 2
-#' @param centre Vector of coordinates of centre of spot. Default is centre of uncropped detector, c(1023.5, 992.5)
-#' @param robust Boolean: use robust model fitting (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).
-#' @return Linear model fitted to given image
-#' @export
-#' @examples
-#' circ.lm <- spot.lm(pw.m)
-#' circ.res <- matrix(circ.lm$residuals, ncol = 1996)
-#' pixel.image(circ.res)
-#' 
- 
-
-
 #' Per-panel linear regression
 #' 
 #' Fit a linear gradient over each of the 32 subpanels within the image
 #' @param image Single-layer array image (1996x1996) to be fitted.
 #' @param terms String specifying terms to be fitted to each subpanel. Default is "x + y", fitting a linear model to the x and y coordinates of each subpanel without considering interactions.
+#' @param robust Boolean: use robust regression (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).
+#' @param left.pad Integer value: how many pixels are cropped from left image edge? Default is 2.
+#' @param upper.pad Integer value: how many pixels are cropped from upper image edge? Default is 20.
 #' @return List containing the terms applied, a matrix of fitted values, and a matrix of model coefficients for each panel.
-#' @param robust Boolean: use robust model fitting (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).
 #' @export
 #' @examples
 #' panel.lm <- panel.lm(circ.res, "poly(x, 2) + y")    # finds coefficients of intercept, x, x^2, y.
@@ -143,6 +128,47 @@ panel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, upper.pa
     }
     list(formula = paste0("value ~ ", terms), fitted.values = join.panels(smoothed.panels, left.pad, upper.pad), models = coeffs)
 }
+
+
+#' Mini-panel linear regression
+#' 
+#' Fit a linear gradient over each of the 4 minipanels within each of the 32 subpanels within the image
+#' @param image Single-layer array image (1996x1996) to be fitted.
+#' @param terms String specifying terms to be fitted to each subpanel. Default is "x + y", fitting a linear model to the x and y coordinates of each subpanel without considering interactions.
+#' @param robust Boolean: use robust regression (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).
+#' @param left.pad Integer value: how many pixels are cropped from left image edge? Default is 2.
+#' @param upper.pad Integer value: how many pixels are cropped from upper image edge? Default is 20.
+#' @return List containing the terms applied, a matrix of fitted values, and a matrix of model coefficients for each panel.
+#' @export
+#' @examples
+#' panel.lm <- panel.lm(circ.res, "y")                 # finds coefficients of intercept and y.
+#' panel.res <- circ.res - panel.lm$fitted.values
+#' minipanel <- minipanel.lm(panel.res, terms = "x + y", robust = T)
+#' res <- panel.res - minipanel$fitted.values
+minipanel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, upper.pad = 20) {
+    terms <- tolower(terms)
+    coeffs <- c()
+    smoothed.panels <- array(dim = c(128, 1024, 32))
+    sp <- subpanels(image)
+    for (s in 1:32) {
+        for(i in 1:4) {
+            df <- melt(sp[, (1024 - (i * 256) + 1): (1024 - ((i-1) * 256)), s])
+            colnames(df) <- c("x", "y", "value")
+            
+            if (robust) {
+                lm <- rlm(as.formula(paste0("value ~ ", terms)), data = df)
+            } else {
+                lm <- lm(as.formula(paste0("value ~ ", terms)), data = df)
+            }
+            coeffs <- rbind(coeffs, coef(lm))
+            smoothed.panels[, (1024 - (i * 256) + 1): (1024 - ((i-1) * 256)), s] <- predict(lm, df)
+        }
+    }
+    list(formula = paste0("value ~ ", terms),
+         fitted.values = join.panels(smoothed.panels, left.pad, upper.pad), 
+         models = coeffs)
+}
+
 
 
 #' Per-column loess smoothing
