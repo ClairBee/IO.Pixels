@@ -83,7 +83,12 @@ screen.spots.xy <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10
     
     zz <- screen.spots(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T)
     
-    # extract coordinates of cells covered by spots identified, return as data frame
-    setNames(data.frame(xyFromCell(zz, which(!is.na(getValues(zz)))), type = "screen spot"),
-             c("row", "col", "type"))
+    if (all(is.na(getValues(zz)))) {
+        # return empty data frame in order to not 
+        return(data.frame("row" = double(), "col" = double(), "type" = character()))
+    } else {
+        # extract coordinates of cells covered by spots identified, return as data frame
+        return(setNames(data.frame(xyFromCell(zz, which(!is.na(getValues(zz)))), type = "screen spot"),
+                 c("row", "col", "type")))
+    }
 }
