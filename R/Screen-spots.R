@@ -1,5 +1,5 @@
 
-#' Identify dim spots on scree
+#' Identify dim spots on screen
 #'
 #' Find dim spots of a given size or larger, in a single white image
 #' @details Requires that \code{pw.m} be available in the global environment, as by running \link{\code{load.pixel.means()}}
@@ -7,12 +7,13 @@
 #' @param smooth.span Smoothing span to be used for Lowess. Default is 1/5
 #' @param min.diam Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.
 #' @param edge.width Integer: dim spots whose midpoint falls within this distance of the detector edge will be removed from the list of screen defects.
+#' @return Raster object with clumps of dim pixels marked as individual objects
 #' @export
 #' @examples
 #' load.pixel.maps()
 #' ds <- screen.spots(160314)
 #' 
-screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10) {
+screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T) {
     dt <- toString(dt)
     im <- pw.m[,,"white", dt]
     
@@ -33,7 +34,11 @@ screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10) {
     
     # use k-means thresholding to identify spots
     # use 1-thresholded value to assign 1 to spots, 0 to background
-    dim <- array(1, dim = c(1996, 1996)) - threshold(eroded, method = "kmeans")
+    if (auto.threshold) {
+        dim <- array(1, dim = c(1996, 1996)) - threshold(eroded, method = "kmeans")
+    } else {
+        dim <- array(1, dim = c(1996, 1996)) - threshold(eroded, mean(eroded) - 3*sd(eroded))
+    }
     
     #------------------------------------------------------------------------------
     # convert to raster & clump values to identify individual spots
@@ -56,4 +61,29 @@ screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10) {
     
     # return array with numbered blobs
     return(blobs)
+}
+
+
+#' Get coordinates of pixels covered by spots on screen
+#' 
+#' Find dim spots of a given size or larger in a single white image, and return their x and y coordinates
+#' @details Requires that \code{pw.m} be available in the global environment, as by running \link{\code{load.pixel.means()}}
+#' @param dt Integer/string specifying image date to be imported
+#' @param smooth.span Smoothing span to be used for Lowess. Default is 1/5
+#' @param min.diam Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.
+#' @param edge.width Integer: dim spots whose midpoint falls within this distance of the detector edge will be removed from the list of screen defects.
+#' @return Data frame containing XY coordinates and type definition as 'screen spot'
+#' @export
+#' @examples
+#' dt <- "160314"
+#' bp <- rbind(get.dim.bright.px(res[, , "grey", dt]),
+#'             screen.spots.xy(dt))
+#'
+screen.spots.xy <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T) {
+    
+    zz <- screen.spots(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T)
+    
+    # extract coordinates of cells covered by spots identified, return as data frame
+    setNames(data.frame(xyFromCell(zz, which(!is.na(getValues(zz)))), type = "screen spot"),
+             c("row", "col", "type"))
 }

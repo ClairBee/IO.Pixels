@@ -80,3 +80,24 @@ cluster.px <- function(bpx) {
     # return data frame of pixel coords, pixel type, cluster size & id and supercluster id
     return(xy[,c("x", "y", "type", "shape", "id", "count", "sc.id", "sc.count")])
 }
+
+
+#' Identify pixels with no x-ray response
+#' 
+#' Identify pixels whose behaviour in the grey or white images is the same as in the black images (no response to source)
+#' @details Requires existence of \code{pw.m} in global environment.
+#' @param dt String or integer date, format yymmdd.
+#' @param limit Quantile of black pixel population to be used as cutoff.
+#' @return Matrix of coordinates of non-responsive pixels
+#' @export
+#' @examples
+#' qq <- no.response(160314, limit = 0.001)
+no.response <- function(dt, limit = 0.01) {
+    dt <- toString(dt)
+    
+    bn <- qJohnson(c(limit, 1-limit), JohnsonFit(pw.m[,,"black", dt]))
+    
+    un <- rbind(which(matrix(findInterval(pw.m[,,"grey", dt], bn), ncol = 1996) == 1, arr.ind = T),
+                which(matrix(findInterval(pw.m[,,"white", dt], bn), ncol = 1996) == 1, arr.ind = T))
+    return(un[!duplicated(un),])
+}
