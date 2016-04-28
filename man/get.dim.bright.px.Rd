@@ -4,7 +4,7 @@
 \alias{get.dim.bright.px}
 \title{Identify bright and dim pixels}
 \usage{
-get.dim.bright.px(im, cropped = T)
+get.dim.bright.px(im)
 }
 \arguments{
 \item{im}{Two-dimensional image array containing pixel values to be classified}

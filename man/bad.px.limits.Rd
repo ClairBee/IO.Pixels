@@ -4,18 +4,16 @@
 \alias{bad.px.limits}
 \title{Get cutoffs for bright/dim pixels}
 \usage{
-bad.px.limits(im, cropped = T)
+bad.px.limits(im)
 }
 \arguments{
 \item{im}{Two-dimensional image array containing pixel values to be thresholded}
-
-\item{cropped}{Boolean: crop edge pixels before thresholding? Default is T.}
 }
 \value{
 List of named numbers to use as cutpoints
 }
 \description{
-For a single image array, return a list of thresholds to categorise very bright, bright, slightly bright, slightly dim, dim, and very dim pixels.
+For a single image array, return a list of thresholds to categorise very bright, bright, slightly bright, slightly dim, dim, and very dim pixels. Edge pixels are ignored for the purpose of this calculation.
 }
 \examples{
 img <- pw.m[,,"white", "160314"]

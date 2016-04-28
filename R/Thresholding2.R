@@ -1,26 +1,26 @@
 
 #' Get cutoffs for bright/dim pixels
 #' 
-#' For a single image array, return a list of thresholds to categorise very bright, bright, slightly bright, slightly dim, dim, and very dim pixels.
+#' For a single image array, return a list of thresholds to categorise very bright, bright, slightly bright, slightly dim, dim, and very dim pixels. Edge pixels are ignored for the purpose of this calculation.
 #' @param im Two-dimensional image array containing pixel values to be thresholded
-#' @param cropped Boolean: crop edge pixels before thresholding? Default is T.
 #' @return List of named numbers to use as cutpoints
 #' @export
 #' @examples
 #' img <- pw.m[,,"white", "160314"]
 #' table(findInterval(img, unlist(bad.px.limits(img))))
 #' 
-bad.px.limits <- function(im, cropped = T) {
+bad.px.limits <- function(im) {
     
-    if (cropped) {im <- im[11:1985, 11:1985]}
+    # remove edge pixels from threshold calculation
+    im <- im[11:1985, 11:1985]
     
     JF <- JohnsonFit(im, moment = "quant")
     
-    bright.v <- mean(im) + (max(im) - mean(im)) / 2
+    bright.v <- mean(im) + abs((max(im) - mean(im)) / 2)
     bright <- mean(im) + abs((bright.v - mean(im)) / 2)
     bright.s <- qJohnson(0.9999, JF)
     
-    dim.v <- mean(im) - (mean(im) - min(im)) / 2
+    dim.v <- mean(im) - abs((mean(im) - min(im)) / 2)
     dim <- mean(im) - abs((mean(im) - dim.v) / 2)
     dim.s <- qJohnson(0.0001, JF)
     
@@ -39,17 +39,18 @@ bad.px.limits <- function(im, cropped = T) {
 #' bp <- get.dim.bright.px(res[,,"white", "160314"])
 #' table(bp$type)
 #' 
-get.dim.bright.px <- function(im, cropped = T) {
-    lim <- bad.px.limits(im, cropped)
+get.dim.bright.px <- function(im) {
+    lim <- bad.px.limits(im)
     
-    if (cropped) {im <- im[11:1985, 11:1985]}
-    
+    # check each category in turn
     bp <- rbind(data.frame(which(im > lim$bv, arr.ind = T), type = "v.bright"),
                 data.frame(which(im > lim$bm, arr.ind = T), type = "bright"),
                 data.frame(which(im > lim$bs, arr.ind = T), type = "s.bright"),
                 data.frame(which(im < lim$dv, arr.ind = T), type = "v.dim"),
                 data.frame(which(im < lim$dm, arr.ind = T), type = "dim"),
                 data.frame(which(im < lim$ds, arr.ind = T), type = "s.dim"))
+    
+    # remove duplicates (most severe category will be retained)
     bp <- bp[!duplicated(bp[,1:2]),]
     return(bp)
 }

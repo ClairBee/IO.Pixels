@@ -10,14 +10,14 @@ s.hist(data, scale = sd.levels(data), scale.colours = sd.colours(), xlim,
 \arguments{
 \item{data}{Array of numbers to be plotting in histogram}
 
-\item{scale}{Vector of scale cutpoints. Default is \link{\code{sd.levels()}}.}
+\item{scale}{Vector of scale cutpoints. Default is \link{\code{sd.levels}}.}
 
-\item{scale.colours}{Vector of scale colours. Default it \link{\code{sd.lcolours()}}}
+\item{scale.colours}{Vector of scale colours. Default is \link{\code{sd.colours}}}
 
-\item{xlim}{Vector of lower and upper x-limits. If not provided, will use central 95% of normal distribution with mean & sd of observed data.}
+\item{xlim}{Vector of lower and upper x-limits. If not provided, will use central 0.95 of normal distribution with mean & sd of observed data.}
 }
 \description{
-Producs a histogram with coloured bars at the bottom showing scale used. Defaults can be used to show legend for plots produced using \link{\code{pixel.image}}.
+Produce a histogram with coloured bars at the bottom showing scale used. Defaults can be used to show legend for plots produced using \link{\code{pixel.image}}.
 }
 \examples{
 pixel.image(b.150828)

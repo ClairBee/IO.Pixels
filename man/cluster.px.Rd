@@ -2,7 +2,7 @@
 % Please edit documentation in R/Clustering.R
 \name{cluster.px}
 \alias{cluster.px}
-\title{Identify clusters and superclusters of pixels}
+\title{Identify clusters of pixels}
 \usage{
 cluster.px(bpx)
 }
@@ -10,12 +10,13 @@ cluster.px(bpx)
 \item{bpx}{Bad pixel map: a matrix or data frame containing coordinates of bad pixels and column "type" defining bad pixel type ("hot", "bright", "dim", "dead").}
 }
 \value{
-Data frame containing bad pixel coordinates and type, along with ID and size of clusters and superclusters to which each is assigned, and a shape classification based on these.
+Data frame containing bad pixel coordinates and type, along with ID and size of cluster to which each is assigned.
 }
 \description{
-Identify clusters of adjacent pixels of each type in a bad pixel map, and also superclusters of adjacent hot and bright pixels.
+Identify clusters of adjacent pixels of each type in a bad pixel map.
 }
 \examples{
-zz <- cluster.px(bp)
+zz <- cluster.px(bpx)
+
 }
 

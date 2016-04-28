@@ -211,11 +211,11 @@ o.plot <- function(data, add = F, ...) {
 
 #' Histogram plot with SD levels shown
 #' 
-#' Producs a histogram with coloured bars at the bottom showing scale used. Defaults can be used to show legend for plots produced using \link{\code{pixel.image}}.
+#' Produce a histogram with coloured bars at the bottom showing scale used. Defaults can be used to show legend for plots produced using \link{\code{pixel.image}}.
 #' @param data Array of numbers to be plotting in histogram
-#' @param scale Vector of scale cutpoints. Default is \link{\code{sd.levels()}}.
-#' @param scale.colours Vector of scale colours. Default it \link{\code{sd.lcolours()}}
-#' @param xlim Vector of lower and upper x-limits. If not provided, will use central 95% of normal distribution with mean & sd of observed data.
+#' @param scale Vector of scale cutpoints. Default is \link{\code{sd.levels}}.
+#' @param scale.colours Vector of scale colours. Default is \link{\code{sd.colours}}
+#' @param xlim Vector of lower and upper x-limits. If not provided, will use central 0.95 of normal distribution with mean & sd of observed data.
 #' @export
 #' @examples
 #' pixel.image(b.150828)
