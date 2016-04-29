@@ -9,21 +9,29 @@
 #' img <- pw.m[,,"white", "160314"]
 #' table(findInterval(img, unlist(bad.px.limits(img))))
 #' 
-bad.px.limits <- function(im) {
+bad.px.limits <- function(im, inner = "Johnson") {
+    
+    inner <- toLower(inner)
     
     # remove edge pixels from threshold calculation
     im <- im[11:1985, 11:1985]
     
     JF <- JohnsonFit(im, moment = "quant")
     
+    bright.s <- switch(inner,
+                       "johnson" = qJohnson(0.9999, JF),
+                       "sd2" = mean(im) + 2 * sd(im))
+    
     bright.v <- mean(im) + abs((max(im) - mean(im)) / 2)
     bright <- mean(im) + abs((bright.v - mean(im)) / 2)
-    bright.s <- qJohnson(0.9999, JF)
+
+    dim.s <-     switch(inner,
+                        "johnson" = qJohnson(0.0001, JF),
+                        "sd2" = mean(im) - 2 * sd(im))
     
     dim.v <- mean(im) - abs((mean(im) - min(im)) / 2)
     dim <- mean(im) - abs((mean(im) - dim.v) / 2)
-    dim.s <- qJohnson(0.0001, JF)
-    
+
     list(dv = dim.v, dm = dim, ds = dim.s, bs = bright.s, bm = bright, bv = bright.v)
 }
 

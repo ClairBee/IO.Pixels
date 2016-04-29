@@ -4,12 +4,12 @@
 \alias{superclusters}
 \title{Identify superclusters of pixels}
 \usage{
-superclusters(cl, excl = c("s.bright"))
+superclusters(cl, excl = c(""))
 }
 \arguments{
 \item{cl}{Bad pixel map or clustered bad pixel map: a matrix or data frame containing coordinates of bad pixels and column "type" defining bad pixel type, with cluster ID and count if already clustered by \link{\code{cluster.by.type}}}
 
-\item{Vector}{of bad pixel types to exclude from superclusters. Default is to exclude screen spots, edge pixels and sightly bright pixels.}
+\item{Vector}{of bad pixel types to exclude from superclusters. Default is to exclude screen spots and edge pixels.}
 }
 \value{
 Data frame containing bad pixel coordinates and type, along with ID and size of clusters and superclusters to which each is assigned, and a shape classification based on these.

@@ -116,7 +116,7 @@ enhance.spots <- function(bpm) {
 #' 
 #' Identify superclusters of bad pixels: small clusters of adjacent bad pixels of different types.
 #' @param cl Bad pixel map or clustered bad pixel map: a matrix or data frame containing coordinates of bad pixels and column "type" defining bad pixel type, with cluster ID and count if already clustered by \link{\code{cluster.by.type}}
-#' @param Vector of bad pixel types to exclude from superclusters. Default is to exclude screen spots, edge pixels and sightly bright pixels.
+#' @param Vector of bad pixel types to exclude from superclusters. Default is to exclude screen spots and edge pixels.
 #' @details Only clusters of size 9 or less will be considered as part of a supercluster.
 #' @return Data frame containing bad pixel coordinates and type, along with ID and size of clusters and superclusters to which each is assigned, and a shape classification based on these.
 #' @export
@@ -125,7 +125,7 @@ enhance.spots <- function(bpm) {
 #' zz <- superclusters(cluster.by.type(bp))
 #' zz <- superclusters(bp)
 #' 
-superclusters <- function(cl, excl = c("s.bright")) {
+superclusters <- function(cl, excl = c("")) {
     
     # if data isn't already clustered, do so now
     if (is.null(cl$id) | is.null(cl$count)) {
@@ -164,17 +164,58 @@ superclusters <- function(cl, excl = c("s.bright")) {
     # recombine with previously excluded pixels to give complete bad pixel map
     if (nrow(cl) != nrow(px)) {
         xy <- rbind(xy,
-                    cbind(cl[(cl$type %in% c("screen spot", "edge", excl) | cl$count > 9),],
-                          sc.id = NA, sc.count = NA, sc.type = "other"))
+                    data.frame(cl[(cl$type %in% c("screen spot", "edge", excl) | cl$count > 9),], 
+                               sc.id = NA, sc.count = NA, sc.type = "other"))
     }
 
     # rationalise supercluster IDs
     xy[xy$sc.type != "supercluster", c("sc.id", "sc.count")] <- NA
-    xy <- transform(xy, sc.id = match(sc.id, unique(sc.id)))
-    
+    xy[xy$sc.type == "supercluster",] <- transform(xy[xy$sc.type == "supercluster",], 
+                                                   sc.id = match(sc.id, unique(sc.id)))
     return(xy)
 }
 
+
+#' Classify bad pixels according to the objects to which they belong.
+#' 
+#' Given a bad pixel map, classify singletons, clusters and superclusters accoring to their composition.
+#' @param bpm Bad pixel map
+#' @return Updated bad pixel map
+#' @export
+#' 
+classify.states <- function(bpm) {
+    
+    bpm <- merge(bpm, 
+                 data.frame(sc.id = unique(bpm$sc.id[!is.na(bpm$sc.id)]),
+                            sc.comp = sapply(split(levels(bpm$type)[(which(apply(as.matrix(table(bpm$sc.id, bpm$type)), 1, ">", 0))-1) %% 11 + 1],
+                                                   which(apply(as.matrix(table(bpm$sc.id, bpm$type)), 1, ">", 0)) %/% 11),
+                                             paste, collapse = ", ")),
+                 all = T, sort = F)[, c(colnames(bpm), "sc.comp")]
+    
+    # single pixels & small clusters are marked with type; slightly bright or dim clusters/singles are ignored.
+    bpm$cat[bpm$sc.type == "singleton"] <- apply(cbind("s", levels(bpm$type)[bpm$type]), 1, paste, collapse = "-")[bpm$sc.type == "singleton"]
+    bpm$cat[bpm$sc.type == "cluster"] <- apply(cbind("c", levels(bpm$type)[bpm$type]), 1, paste, collapse = "-")[bpm$sc.type == "cluster"]
+    bpm$cat[bpm$sc.type %in% c("singleton", "cluster") & (bpm$type %in% c("s.bright", "s.dim"))] <- "marginal"
+    
+    # screen spots, edge pixels and large areas of bright or dim pixels are marked
+    bpm$cat[bpm$sc.type == "other"] <- "other"
+    bpm$cat[bpm$type == "screen spot"] <- "screen spot"
+    bpm$cat[bpm$type == "edge"] <- "edge"
+    
+    # superclusters, separated by severity of damage
+    bpm$cat[grep("bright", bpm$sc.comp)] <- "sc-bright"
+    bpm$cat[grep("hot", bpm$sc.comp)] <- "sc-hot"
+    bpm$cat[grep("no response", bpm$sc.comp)] <- "sc-no-response"
+    bpm$cat[grep("dead", bpm$sc.comp)] <- "sc-dead"
+    
+    bpm$cat <- ordered(bpm$cat, levels = unique(c("sc-dead", "sc-no-response", "sc-hot", "sc-bright",
+                                                  "c-dead", "c-no response", "c-hot", "c-v.bright", "c-bright", "c-v.dim", "c-dim",
+                                                  "s-dead", "s-no response", "s-hot", "s-v.bright", "s-bright", "s-v.dim", "s-dim",
+                                                  "screen spot", "edge", "other", "marginal"), levels(bpm$cat)))
+    
+    bpm <- bpm[,-which(colnames(bpm) == "sc.comp")]
+    return(bpm)
+}
 
 #' Identify pixels with no x-ray response
 #' 

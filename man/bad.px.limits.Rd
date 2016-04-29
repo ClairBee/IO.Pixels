@@ -4,7 +4,7 @@
 \alias{bad.px.limits}
 \title{Get cutoffs for bright/dim pixels}
 \usage{
-bad.px.limits(im)
+bad.px.limits(im, inner = "Johnson")
 }
 \arguments{
 \item{im}{Two-dimensional image array containing pixel values to be thresholded}

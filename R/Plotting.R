@@ -235,6 +235,23 @@ o.plot <- function(data, add = F, ...) {
 }
 
 
+#' Get coordinates of points to plot zoom
+#' 
+#' Given a set of points and the surrounding area to plot, obtain coordinates to create a plot of a small subset of an image
+#' @param points Matrix or data frame, the first two columns of which are the x and y coordinates of the points to be plotted.
+#' @param surround Number of additional pixels to plot in every direction around the selected points
+#' @return matrix of coordinates to plot
+#' @export
+#'  
+get.focus <- function(points, surround = 3) {
+    n <- 2 * surround + 1
+    focus <- matrix(c(round(mean(points$x), 0) + rep(c(-surround: surround), n),
+                      round(mean(points$y), 0) + sort(rep(c(-surround: surround), n))), ncol = 2)
+    focus[focus <= 0] <- 0
+    focus[focus >= 1996] <- 1996
+    return(focus)
+}
+
 
 #' Histogram plot with SD levels shown
 #' 
