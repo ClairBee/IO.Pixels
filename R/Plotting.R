@@ -86,6 +86,31 @@ sd.colours <- function() {
 }
 
 
+#' Colour scheme for bad pixel plot
+#'
+#' Support function: returns a vector of colours to be used in bad pixel plotting.
+#' @param block Vector of categories to omit from the plot, which will be set to colour NA. Default is c("edge", "s.bright").
+#' @return Vector of colours.
+#' @export
+#' 
+bp.cols <- function(block = c("edge", "s.bright")) {
+    
+    cats <- c("no response", "dead", "hot", "v.bright","bright", "s.bright", "screen spot", "edge", "v.dim", "dim", "s.dim")
+    bp.cols <- c("purple", "black", "red", "orange", "gold", NA, "grey", NA, "green3", "green", "lightskyblue")
+    bp.cols[which(cats %in% block)] <- NA
+    return(bp.cols)
+}
+
+
+#' Plot bad pixels
+#' 
+#' Plot the coordinates and types of a bad pixel map
+#' @param bpm Data frame containing xy coordinates of pixels to be plotted, and a field "type" specifying the category of each bad pixel identified.
+#' @export
+#' 
+plot.bad.px <- function(bpm, pch = 15, xlab = "", ylab = "", ...) {
+    plot(bpm[,1:2], pch = pch, col = bp.cols()[bpm$type], asp = T, xlab = xlab, ylab = ylab, ...)
+}
 
 #' Contour plot of pixel values
 #'
