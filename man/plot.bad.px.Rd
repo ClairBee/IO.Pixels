@@ -4,10 +4,15 @@
 \alias{plot.bad.px}
 \title{Plot bad pixels}
 \usage{
-plot.bad.px(bpm, pch = 15, xlab = "", ylab = "", ...)
+plot.bad.px(bpm, pch = 15, xlab = "", ylab = "", block = c("edge",
+  "s.bright"), ...)
 }
 \arguments{
 \item{bpm}{Data frame containing xy coordinates of pixels to be plotted, and a field "type" specifying the category of each bad pixel identified.}
+
+\item{block}{Vector of categories to omit from the plot, which will be set to colour NA. Default is c("edge", "s.bright").}
+
+\item{...}{Additional optional graphical parameters to pass to plotting function}
 }
 \description{
 Plot the coordinates and types of a bad pixel map

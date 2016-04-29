@@ -93,10 +93,10 @@ sd.colours <- function() {
 #' @return Vector of colours.
 #' @export
 #' 
-bp.cols <- function(block = c("edge", "s.bright")) {
+bp.colours <- function(block = c("edge", "s.bright")) {
     
     cats <- c("no response", "dead", "hot", "v.bright","bright", "s.bright", "screen spot", "edge", "v.dim", "dim", "s.dim")
-    bp.cols <- c("purple", "black", "red", "orange", "gold", NA, "grey", NA, "green3", "green", "lightskyblue")
+    bp.cols <- c("purple", "black", "red", "orange", "gold", "yellow", "grey", "darkgrey", "green3", "green", "lightskyblue")
     bp.cols[which(cats %in% block)] <- NA
     return(bp.cols)
 }
@@ -106,10 +106,12 @@ bp.cols <- function(block = c("edge", "s.bright")) {
 #' 
 #' Plot the coordinates and types of a bad pixel map
 #' @param bpm Data frame containing xy coordinates of pixels to be plotted, and a field "type" specifying the category of each bad pixel identified.
+#' @param block Vector of categories to omit from the plot, which will be set to colour NA. Default is c("edge", "s.bright").
+#' @param ... Additional optional graphical parameters to pass to plotting function
 #' @export
 #' 
-plot.bad.px <- function(bpm, pch = 15, xlab = "", ylab = "", ...) {
-    plot(bpm[,1:2], pch = pch, col = bp.cols()[bpm$type], asp = T, xlab = xlab, ylab = ylab, ...)
+plot.bad.px <- function(bpm, pch = 15, xlab = "", ylab = "", block = c("edge", "s.bright"), ...) {
+    plot(bpm[,1:2], pch = pch, col = bp.colours(block = block)[bpm$type], asp = T, xlab = xlab, ylab = ylab, ...)
 }
 
 #' Contour plot of pixel values

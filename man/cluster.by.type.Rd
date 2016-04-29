@@ -4,10 +4,10 @@
 \alias{cluster.by.type}
 \title{Identify clusters of pixels}
 \usage{
-cluster.by.type(bpx)
+cluster.by.type(bpm)
 }
 \arguments{
-\item{bpx}{Bad pixel map: a matrix or data frame containing coordinates of bad pixels and column "type" defining bad pixel type ("hot", "bright", "dim", "dead").}
+\item{bpm}{Bad pixel map: a matrix or data frame containing coordinates of bad pixels and column "type" defining bad pixel type ("hot", "bright", "dim", "dead").}
 }
 \value{
 Data frame containing bad pixel coordinates and type, along with ID and size of cluster to which each is assigned.
@@ -16,7 +16,7 @@ Data frame containing bad pixel coordinates and type, along with ID and size of 
 Identify clusters of adjacent pixels of each type in a bad pixel map.
 }
 \examples{
-zz <- cluster.by.type(bpx)
+zz <- cluster.by.type(bpm)
 
 }
 
