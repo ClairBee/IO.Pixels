@@ -316,7 +316,7 @@ load.pixel.means <- function(fpath = "./Other-data/") {
     # load single image first to get dim names
     pw.b <- readRDS(paste0(fpath, "Pixelwise-means-black.rds"))
     
-    pw.m <- array(dim = c(1996, 1996, 3, 11),
+    pw.m <- array(dim = c(1996, 1996, 3, dim(pw.b)[[3]]),
                   dimnames = list(NULL, NULL, c("black", "grey", "white"), dimnames(pw.b)[[3]]))
     
     # load all pixelwise means into single array
@@ -342,7 +342,7 @@ load.pixel.sds <- function(fpath = "./Other-data/") {
     # load single image first to get dim names
     pw.b <- readRDS(paste0(fpath, "Pixelwise-sds-black.rds"))
     
-    pw.sd <- array(dim = c(1996, 1996, 3, 11),
+    pw.sd <- array(dim = c(1996, 1996, 3, dim(pw.b)[[3]]),
                   dimnames = list(NULL, NULL, c("black", "grey", "white"), dimnames(pw.b)[[3]]))
     
     # load all pixelwise means into single array
