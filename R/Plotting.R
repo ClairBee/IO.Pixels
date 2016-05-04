@@ -14,6 +14,8 @@
 #' 
 sd.levels <- function(data, midpoint = "mean") {
     
+    data <- data[!is.na(data)]
+    
     if (midpoint == "median") {
         m <- median(data)
     } else {
@@ -162,7 +164,7 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), 
                         midpoint = "mean", break.levels = sd.levels(data, "mean"), 
                         panels = F, x.lab = "", y.lab = "", ...) {
-    
+
     image(x.range, y.range, 
           data[x.range, y.range], 
           col = sd.colours(),
