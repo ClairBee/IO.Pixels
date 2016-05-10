@@ -267,6 +267,9 @@ get.focus <- function(points, surround = 3) {
 #' pixel.image(b.150828)
 #' scale.hist(b.150828)
 s.hist <- function(data, scale = sd.levels(data), scale.colours = sd.colours(), xlim, ...) {
+    
+    data <- data[!is.na(data)]
+    
     if (missing(xlim)) {
         xlim <- c(floor(qnorm(0.025, mean(data), sd(data))/10)*10,
                   ceiling(qnorm(0.975, mean(data), sd(data))/10)*10)
