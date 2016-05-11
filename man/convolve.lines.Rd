@@ -4,7 +4,7 @@
 \alias{convolve.lines}
 \title{Identify bad rows or columns}
 \usage{
-convolve.lines(im, k.size = 5, horizontal = F, dim = F)
+convolve.lines(im, k.size = 5, horizontal = F, dim.lines = F)
 }
 \arguments{
 \item{im}{2d image array to be convolved.}
@@ -13,7 +13,7 @@ convolve.lines(im, k.size = 5, horizontal = F, dim = F)
 
 \item{horizontal}{Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.}
 
-\item{dim}{Boolean: look for lines of dim pixels (T) instead of bright (F)? Default is F, enhance bright lines.}
+\item{dim.lines}{Boolean: look for lines of dim pixels (T) instead of bright (F)? Default is F, enhance bright lines.}
 }
 \value{
 Convolved image.
