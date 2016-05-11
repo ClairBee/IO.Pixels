@@ -5,7 +5,8 @@
 \title{Find lines in image}
 \usage{
 find.lines(im, k.size = 5, threshold.at = 5500, sm.size = 11,
-  min.length = 6, horizontal = F, dim.lines = F)
+  min.length = 6, filter.at = list(cover = 0.5, filled = 20),
+  horizontal = F, dim.lines = F)
 }
 \arguments{
 \item{im}{2d image array to be convolved.}
@@ -23,7 +24,7 @@ find.lines(im, k.size = 5, threshold.at = 5500, sm.size = 11,
 \item{dim.lines}{Boolean: look for lines of dim pixels (T) instead of bright (F)? Default is F, enhance bright lines.}
 }
 \value{
-Image array with specified lines marked
+Image array with lines marked
 }
 \description{
 Use a combination of convolution & thresholding to identify consistently bright or dim columns or rows in an image

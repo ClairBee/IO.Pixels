@@ -54,46 +54,16 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
 }
 
 
-#' Find lines in image
-#' 
-#' Use a combination of convolution & thresholding to identify consistently bright or dim columns or rows in an image
-#' @param im 2d image array to be convolved.
-#' @param k.size Size of (square) kernel to use. Default is 5.
-#' @param threshold.at Numeric value at which to threshold convolved data. Default is 5500, which will highlight rows that are approximately 300 grey values higher than both of their neighbours in the direction of interest.
-#' @param horizontal Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.
-#' @param dim.lines Boolean: look for lines of dim pixels (T) instead of bright (F)? Default is F, enhance bright lines.
-#' @param sm.size Length of (linear) kernel to use. Default is 11.
-#' @param min.length Integer: minimum number of pixels to accept as a line after smoothing.
-#' @return Image array with specified lines marked
-#' @export
-#' 
-find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.length = 6,
-                       horizontal = F, dim.lines = F) {
-    
-    # perform specified convolution
-    conv <- convolve.lines(im, k.size = k.size, horizontal = horizontal, dim.lines = dim.lines)
-    
-    # threshold resulting image
-    th <- threshold(conv, level = threshold.at)
-    
-    # smooth & repair lines
-    sm <- smooth.lines(th, sm.size = sm.size, horizontal = horizontal, min.length = min.length)
-    
-    return(sm)
-}
-
 
 #' Summarise dimensions of line segments identified
 #' 
 #' After identifying potential bright/dim lines/rows using \link{\code{find.lines}}, produce a table of summary information about each column found.
 #' @param im 2d image array after convolution, thresholding and smoothing
 #' @param rows Boolean: summarise over rows (T) or columns (F)? Default is columns.
-#' @param filter Boolean: return the full data frame (F) or only longer lines (T)? Default is full data frame.
-#' @param filter.at List of numeric filtering parameters: 'cover' is minimum proportion of line that must be filled to qualify as a long line (default: 0.5), 'filled' is minimum length (default: 20). 
 #' @return Data frame containing maximum and minimum row identified as part of a line segment, and the range and proportion of each column covered by line segments.
 #' @export
 #' 
-summarise.lines <- function(im, rows = F, filter = F, filter.at = list(cover = 0.5, filled = 20)) {
+summarise.lines <- function(im, rows = F) {
     
     xy <- data.frame(xyFromCell(m2r(im), which(getValues(m2r(im)) > 0)))
     
@@ -109,9 +79,72 @@ summarise.lines <- function(im, rows = F, filter = F, filter.at = list(cover = 0
                           filled = length(x), range = max(y) - min(y) + 1,
                           cover = filled / range))
     }
-    
-    if (filter) {
-        df <- df[df$cover > filter.at$cover & df$filled > filter.at$filled,]
-    }
+
     return(df)
+}
+
+
+#' Filter lines to retain only long ones
+#' 
+#' @param im 2d image array after convolution, thresholding and smoothing
+#' @param rows Boolean: summarise over rows (T) or columns (F)? Default is columns.
+#' @param filter.at List of numeric filtering parameters: 'cover' is minimum proportion of line that must be filled to qualify as a long line (default: 0.5), 'filled' is minimum length (default: 20). 
+#' @return image array with lines marked with separate indices for identification
+#' @export
+#' 
+filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), rows = F) {
+    
+    df <- summarise.lines(im, rows = rows)
+    
+    df <- df[df$cover > filter.at$cover & df$filled > filter.at$filled,]
+    
+    # if line ends are within 10px of panel centre or panel edge, reset to the centre/edge
+    # (panel edges are cropped by convolution)
+    df$ymin[df$ymin %in% (993 + c(0:9))] <- 993
+    df$ymin[df$ymin %in% (1 + c(0:9))] <- 1
+    
+    df$ymax[df$ymax %in% (992 - c(0:9))] <- 992
+    df$ymax[df$ymax %in% (1996 - c(0:9))] <- 1996
+    
+    new.im <- array(0, dim = dim(im))
+    
+    for (i in 1:nrow(df)) {
+        new.im[df$col[i], df$ymin[i]:df$ymax[i]] <- i
+    }
+    
+    return(new.im)
+}
+
+
+
+#' Find lines in image
+#' 
+#' Use a combination of convolution & thresholding to identify consistently bright or dim columns or rows in an image
+#' @param im 2d image array to be convolved.
+#' @param k.size Size of (square) kernel to use. Default is 5.
+#' @param threshold.at Numeric value at which to threshold convolved data. Default is 5500, which will highlight rows that are approximately 300 grey values higher than both of their neighbours in the direction of interest.
+#' @param horizontal Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.
+#' @param dim.lines Boolean: look for lines of dim pixels (T) instead of bright (F)? Default is F, enhance bright lines.
+#' @param sm.size Length of (linear) kernel to use. Default is 11.
+#' @param min.length Integer: minimum number of pixels to accept as a line after smoothing.
+#' @return Image array with lines marked
+#' @export
+#' 
+find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.length = 6,
+                       filter.at = list(cover = 0.5, filled = 20),
+                       horizontal = F, dim.lines = F) {
+    
+    # perform specified convolution
+    conv <- convolve.lines(im, k.size = k.size, horizontal = horizontal, dim.lines = dim.lines)
+    
+    # threshold resulting image
+    th <- threshold(conv, level = threshold.at)
+    
+    # smooth & repair lines
+    sm <- smooth.lines(th, sm.size = sm.size, horizontal = horizontal, min.length = min.length)
+    
+    # filter out short line segments and return image of long segments identified
+    lines <- filter.lines(sm, filter.at = filter.at)
+    
+    return(lines)
 }
