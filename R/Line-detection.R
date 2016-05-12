@@ -92,7 +92,7 @@ summarise.lines <- function(im, horizontal = F) {
 #' @return image array with lines marked with separate indices for identification
 #' @export
 #' 
-filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), horizontal = F) {
+filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges = 20, horizontal = F) {
     
     df <- summarise.lines(im, horizontal = horizontal)
     
@@ -114,6 +114,9 @@ filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), horizon
         }
     }
 
+    # ignore any lines that are within 20px of a panel edge
+    
+    
     return(new.im)
 }
 
