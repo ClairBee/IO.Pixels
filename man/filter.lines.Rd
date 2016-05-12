@@ -4,14 +4,14 @@
 \alias{filter.lines}
 \title{Filter lines to retain only long ones}
 \usage{
-filter.lines(im, filter.at = list(cover = 0.5, filled = 20), rows = F)
+filter.lines(im, filter.at = list(cover = 0.5, filled = 20), horizontal = F)
 }
 \arguments{
 \item{im}{2d image array after convolution, thresholding and smoothing}
 
 \item{filter.at}{List of numeric filtering parameters: 'cover' is minimum proportion of line that must be filled to qualify as a long line (default: 0.5), 'filled' is minimum length (default: 20).}
 
-\item{rows}{Boolean: summarise over rows (T) or columns (F)? Default is columns.}
+\item{horizontal}{Boolean: summarise over rows (T) or columns (F)? Default is columns.}
 }
 \value{
 image array with lines marked with separate indices for identification

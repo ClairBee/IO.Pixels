@@ -4,12 +4,12 @@
 \alias{summarise.lines}
 \title{Summarise dimensions of line segments identified}
 \usage{
-summarise.lines(im, rows = F)
+summarise.lines(im, horizontal = F)
 }
 \arguments{
 \item{im}{2d image array after convolution, thresholding and smoothing}
 
-\item{rows}{Boolean: summarise over rows (T) or columns (F)? Default is columns.}
+\item{horizontal}{Boolean: summarise over rows (T) or columns (F)? Default is columns.}
 }
 \value{
 Data frame containing maximum and minimum row identified as part of a line segment, and the range and proportion of each column covered by line segments.

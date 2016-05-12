@@ -59,15 +59,15 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
 #' 
 #' After identifying potential bright/dim lines/rows using \link{\code{find.lines}}, produce a table of summary information about each column found.
 #' @param im 2d image array after convolution, thresholding and smoothing
-#' @param rows Boolean: summarise over rows (T) or columns (F)? Default is columns.
+#' @param horizontal Boolean: summarise over rows (T) or columns (F)? Default is columns.
 #' @return Data frame containing maximum and minimum row identified as part of a line segment, and the range and proportion of each column covered by line segments.
 #' @export
 #' 
-summarise.lines <- function(im, rows = F) {
+summarise.lines <- function(im, horizontal = F) {
     
     xy <- data.frame(xyFromCell(m2r(im), which(getValues(m2r(im)) > 0)))
     
-    if (rows) {
+    if (horizontal) {
         df <- ddply(xy, .(row = y), summarise, xmin = min(x), xmax = max(x),
                     filled = length(x), range = max(x) - min(x) + 1,
                     cover = filled / range)
@@ -87,14 +87,14 @@ summarise.lines <- function(im, rows = F) {
 #' Filter lines to retain only long ones
 #' 
 #' @param im 2d image array after convolution, thresholding and smoothing
-#' @param rows Boolean: summarise over rows (T) or columns (F)? Default is columns.
+#' @param horizontal Boolean: summarise over rows (T) or columns (F)? Default is columns.
 #' @param filter.at List of numeric filtering parameters: 'cover' is minimum proportion of line that must be filled to qualify as a long line (default: 0.5), 'filled' is minimum length (default: 20). 
 #' @return image array with lines marked with separate indices for identification
 #' @export
 #' 
-filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), rows = F) {
+filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), horizontal = F) {
     
-    df <- summarise.lines(im, rows = rows)
+    df <- summarise.lines(im, horizontal = horizontal)
     
     df <- df[df$cover > filter.at$cover & df$filled > filter.at$filled,]
     
@@ -108,10 +108,12 @@ filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), rows = 
     
     new.im <- array(0, dim = dim(im))
     
-    for (i in 1:nrow(df)) {
-        new.im[df$col[i], df$ymin[i]:df$ymax[i]] <- i
+    if (nrow(df) > 0) {
+        for (i in 1:nrow(df)) {
+            new.im[df$col[i], df$ymin[i]:df$ymax[i]] <- i
+        }
     }
-    
+
     return(new.im)
 }
 
