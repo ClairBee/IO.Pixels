@@ -11,7 +11,7 @@
 #' 
 bad.px.limits <- function(im, inner = "Johnson") {
     
-    inner <- toLower(inner)
+    inner <- tolower(inner)
     
     # remove edge pixels from threshold calculation
     im <- im[11:1985, 11:1985]
@@ -20,17 +20,17 @@ bad.px.limits <- function(im, inner = "Johnson") {
     
     bright.s <- switch(inner,
                        "johnson" = qJohnson(0.9999, JF),
-                       "sd2" = mean(im) + 2 * sd(im))
+                       "sd2" = median(im) + 2 * sd(im))
     
-    bright.v <- mean(im) + abs((max(im) - mean(im)) / 2)
-    bright <- mean(im) + abs((bright.v - mean(im)) / 2)
+    bright.v <- median(im) + abs((max(im) - median(im)) / 2)
+    bright <- median(im) + abs((bright.v - median(im)) / 2)
 
     dim.s <-     switch(inner,
                         "johnson" = qJohnson(0.0001, JF),
-                        "sd2" = mean(im) - 2 * sd(im))
+                        "sd2" = median(im) - 2 * sd(im))
     
-    dim.v <- mean(im) - abs((mean(im) - min(im)) / 2)
-    dim <- mean(im) - abs((mean(im) - dim.v) / 2)
+    dim.v <- median(im) - abs((median(im) - min(im)) / 2)
+    dim <- median(im) - abs((median(im) - dim.v) / 2)
 
     list(dv = dim.v, dm = dim, ds = dim.s, bs = bright.s, bm = bright, bv = bright.v)
 }
