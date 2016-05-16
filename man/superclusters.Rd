@@ -18,7 +18,7 @@ Data frame containing bad pixel coordinates and type, along with ID and size of 
 Identify superclusters of bad pixels: small clusters of adjacent bad pixels of different types.
 }
 \details{
-Only clusters of size 9 or less will be considered as part of a supercluster.
+Only clusters of size 9 or less will be considered as part of a supercluster, with the exception of bright or dim columns or rows identified. To exclude bright or dim lines, add those types to the 'excl' parameter.
 }
 \examples{
 # should both give same result

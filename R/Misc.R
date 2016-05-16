@@ -26,6 +26,23 @@ sample.healthy <- function(bad.pixels, n = nrow(bad.pixels)) {
 }
 
 
+#' Convert bad pixel map to image
+#' 
+#' Given a bad pixel map with coordinates and types, create a 2d array showing each type of bad pixel identified
+#' @param bpx Bad pixel map: data frame with first two columns containing x and y coordinates of bad pixels, and a column 'type' specifying what kind of bad pixel was identified.
+#' @param im.dim Vector of dimensions of image array to create. Default is c(1996, 1996).
+#' @return 2d image array of the specified dimensions
+#' @export
+#' 
+bpx2im <- function(bpx, im.dim = c(1996, 1996)) {
+    im <- array(0, dim = im.dim)
+    im[as.matrix(bpx[,1:2])] <- bpx$type
+    return(im)
+}
+
+
+
+
 
 #' Combine two bad pixel maps
 #'

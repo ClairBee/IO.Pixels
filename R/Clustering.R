@@ -117,7 +117,7 @@ enhance.spots <- function(bpm) {
 #' Identify superclusters of bad pixels: small clusters of adjacent bad pixels of different types.
 #' @param cl Bad pixel map or clustered bad pixel map: a matrix or data frame containing coordinates of bad pixels and column "type" defining bad pixel type, with cluster ID and count if already clustered by \link{\code{cluster.by.type}}
 #' @param Vector of bad pixel types to exclude from superclusters. Default is to exclude screen spots and edge pixels.
-#' @details Only clusters of size 9 or less will be considered as part of a supercluster.
+#' @details Only clusters of size 9 or less will be considered as part of a supercluster, with the exception of bright or dim columns or rows identified. To exclude bright or dim lines, add those types to the 'excl' parameter. 
 #' @return Data frame containing bad pixel coordinates and type, along with ID and size of clusters and superclusters to which each is assigned, and a shape classification based on these.
 #' @export
 #' @examples
@@ -133,11 +133,12 @@ superclusters <- function(cl, excl = c("")) {
     }
     
     # exclude screen spots and any other categories to be excluded
-    px <- cl[!(cl$type %in% c("screen spot", "edge", excl) | cl$count > 9),]
+    px <- cl[!(cl$type %in% c("screen spot", "edge", excl)),]
     
     # exclude clusters larger than 9 pixels: only interested in small clusters here
+    # however, retain columns or rows of bright pixels (if not already excluded by user)
     # generally, removes areas of slightly dim pixels in corners/edges of image
-    px <- px[px$count <= 9,]
+        px <- px[(px$count <= 9) | (px$type %in% c("line.b", "line.d")),]
     
     # create matrix to populate raster
     px.vals <- array(dim = c(1996, 1996))
@@ -164,7 +165,8 @@ superclusters <- function(cl, excl = c("")) {
     # recombine with previously excluded pixels to give complete bad pixel map
     if (nrow(cl) != nrow(px)) {
         xy <- rbind(xy,
-                    data.frame(cl[(cl$type %in% c("screen spot", "edge", excl) | cl$count > 9),], 
+                    data.frame(cl[(cl$type %in% c("screen spot", "edge", excl)) |
+                                      ((cl$count > 9) & (!cl$type %in% c("line.b", "line.d"))),], 
                                sc.id = NA, sc.count = NA, sc.type = "other"))
     }
 
@@ -178,7 +180,7 @@ superclusters <- function(cl, excl = c("")) {
 
 #' Classify bad pixels according to the objects to which they belong.
 #' 
-#' Given a bad pixel map, classify singletons, clusters and superclusters accoring to their composition.
+#' Given a bad pixel map, classify singletons, clusters and superclusters according to their composition.
 #' @param bpm Bad pixel map
 #' @return Updated bad pixel map
 #' @export
