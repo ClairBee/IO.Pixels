@@ -13,6 +13,6 @@ classify.states(bpm)
 Updated bad pixel map
 }
 \description{
-Given a bad pixel map, classify singletons, clusters and superclusters accoring to their composition.
+Given a bad pixel map, classify singletons, clusters and superclusters according to their composition.
 }
 

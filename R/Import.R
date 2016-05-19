@@ -72,7 +72,9 @@ load.images <- function(img.date, batch, fpath = "/home/clair/Documents/Pixels/I
 #' 
 #' 
 load.daily <- function(img.date, fpath = "/home/clair/Documents/Pixels/Image-data/") {
-    m <- array(dim = c(1996, 1996, 20, 3))
+    m <- array(dim = c(1996, 1996, 20, 3),
+               dimnames = list(NULL, NULL, NULL, c("black", "grey", "white")))
+    
     m[,,,1] <- load.images(img.date, "black")
     m[,,,2] <- load.images(img.date, "grey")
     m[,,,3] <- load.images(img.date, "white")

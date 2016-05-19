@@ -168,3 +168,39 @@ r2m <- function(rast) {
     mat <- matrix(getValues(rast), ncol = dim(rast)[2], byrow = T)
     t(mat[dim(mat)[1]:1,,drop = F])
 }
+
+
+#' Return coordinates of edge pixels
+#' 
+#' For a given image array, return the coordinates of pixels lying within a given distance of the edge
+#' @param im Single-layer image array (needed to obtain dimensions)
+#' @param edge.width Integer: number of pixels to treat as panel edges. Default is 10.
+#' @return Data frame containing coordinates of edge pixels
+#' @export
+#'  
+edge.px <- function(im, edge.width = 10) {
+    
+    im.width <- dim(im)[1]; im.height <- dim(im)[2]
+    
+    x <- c(sort(rep(1:edge.width, im.height)),                               # left edge
+           sort(rep((im.width - edge.width + 1):im.width, im.height)),       # right edge
+           rep(1:im.width, edge.width * 2))                                  # top & bottom edges
+                   
+    y <- c(rep(1:im.height, edge.width * 2),
+           sort(rep(1:edge.width, im.width)),
+           sort(rep((im.height - edge.width + 1):im.height, im.width)))
+                   
+    data.frame(row = x, col = y)
+}
+
+
+#' Get median differences over image
+#' 
+#' Run a median filter over an image to obtain a smoothed version, then subtract this from the original image to highlight any points that are unusually high in relation to their neighbours
+#' @param im Single-layer image array
+#' @return Image array containing pixelwise differences
+#' @export
+#' 
+med.diffs <- function(im) {
+    im - r2m(focal(m2r(im), matrix(rep(1, 9), ncol = 3), fun = median))
+}
