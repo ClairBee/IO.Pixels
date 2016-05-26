@@ -232,9 +232,11 @@ classify.states <- function(bpm) {
 no.response <- function(dt, limit = 0.01) {
     dt <- toString(dt)
     
-    bn <- qJohnson(c(limit, 1-limit), JohnsonFit(pw.m[,,"black", dt]))
+    nc <- ncol(pw.m[,,,dt])
     
-    un <- rbind(which(matrix(findInterval(pw.m[,,"grey", dt], bn), ncol = 1996) == 1, arr.ind = T),
-                which(matrix(findInterval(pw.m[,,"white", dt], bn), ncol = 1996) == 1, arr.ind = T))
+    bn <- qJohnson(c(limit, 1-limit), JohnsonFit(pw.m[,,"black", dt][!is.na(pw.m[,,"black", dt])]))
+    
+    un <- rbind(which(matrix(findInterval(pw.m[,,"grey", dt], bn), ncol = nc) == 1, arr.ind = T),
+                which(matrix(findInterval(pw.m[,,"white", dt], bn), ncol = nc) == 1, arr.ind = T))
     return(un[!duplicated(un),])
 }

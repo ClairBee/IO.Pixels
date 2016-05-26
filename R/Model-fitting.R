@@ -183,20 +183,24 @@ minipanel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, uppe
 #' smoothed.res <- panel.res - smoothed
 #' pixel.image(smoothed.res)
 #' s.hist(smoothed.res)
-lowess.per.column <- function(image, span = 1/15) {
+lowess.per.column <- function(image, span = 1/15, midline = 992.5) {
+    
+    upper.midline <- ceiling(midline)
+    lower.midline <- floor(midline)
+    upper.edge <- nrow(image)
     
     # split image into upper & lower panels: smoothing across midline is nonsensical
-    upper <- image[, 993:1996]
-    lower <- image[, 1:992]
+    upper <- image[, upper.midline:upper.edge]
+    lower <- image[, 1:lower.midline]
     
     # apply lowess smoothing per column to each panel in turn
     upper.smoo <- do.call("rbind", lapply(apply(upper, 1, lowess, f = span), "[[", 2))
     lower.smoo <- do.call("rbind", lapply(apply(lower, 1, lowess, f = span), "[[", 2))
     
     # join upper & lower panels again 
-    smoo <- array(dim = c(1996, 1996))
-    smoo[, 993:1996] <- upper.smoo
-    smoo[, 1:992] <- lower.smoo
+    smoo <- array(dim = dim(image))
+    smoo[, upper.midline:upper.edge] <- upper.smoo
+    smoo[, 1:lower.midline] <- lower.smoo
     
     return(smoo)
 }

@@ -9,12 +9,17 @@
 #' img <- pw.m[,,"white", "160314"]
 #' table(findInterval(img, unlist(bad.px.limits(img))))
 #' 
-bad.px.limits <- function(im, inner = "Johnson") {
+bad.px.limits <- function(im, inner = "Johnson", edge.width = 10) {
     
+    edge.width <- edge.width + 1
+    x <- ncol(im); y <- nrow(im)
     inner <- tolower(inner)
     
     # remove edge pixels from threshold calculation
-    im <- im[11:1985, 11:1985]
+    im <- im[edge.width:(x - edge.width), edge.width:(y - edge.width)]
+    
+    # remove NA pixels
+    im <- im[!is.na(im)]
     
     JF <- JohnsonFit(im, moment = "quant")
     
@@ -50,6 +55,7 @@ bad.px.limits <- function(im, inner = "Johnson") {
 get.dim.bright.px <- function(im) {
     lim <- bad.px.limits(im)
     
+    im <- im[!is.na(im)]
     # check each category in turn
     bp <- rbind(data.frame(which(im > lim$bv, arr.ind = T), type = "v.bright"),
                 data.frame(which(im > lim$bm, arr.ind = T), type = "bright"),

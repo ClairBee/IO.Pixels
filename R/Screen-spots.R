@@ -16,9 +16,10 @@
 screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T) {
     dt <- toString(dt)
     im <- pw.m[,,"white", dt]
+    im.dims <- dim(im)
     
     sk <- shapeKernel(c(min.diam, min.diam), type = "disc")
-
+    
     # apply lowess smoothing
     smoo <- lowess.per.column(im, span = smooth.span)
     res <- im - smoo
@@ -35,15 +36,15 @@ screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, a
     # use k-means thresholding to identify spots
     # use 1-thresholded value to assign 1 to spots, 0 to background
     if (auto.threshold) {
-        dim <- array(1, dim = c(1996, 1996)) - threshold(eroded, method = "kmeans")
+        dim <- array(1, dim = im.dims) - threshold(eroded, method = "kmeans")
     } else {
-        dim <- array(1, dim = c(1996, 1996)) - threshold(eroded, mean(eroded) - 3*sd(eroded))
+        dim <- array(1, dim = im.dims) - threshold(eroded, mean(eroded) - 3*sd(eroded))
     }
     
     #------------------------------------------------------------------------------
     # convert to raster & clump values to identify individual spots
     # (values need to be reordered to maintain image orientation)
-    blobs <- clump(raster(t(dim[,1996:1]),  xmn = 0.5, xmx = 1996.5, ymn = 0.5, ymx = 1996.5), dir = 4)
+    blobs <- clump(raster(t(dim[,im.dims[2]:1]),  xmn = 0.5, xmx = im.dims[1] + 0.5, ymn = 0.5, ymx = im.dims[2] + 0.5), dir = 4)
     
     # summarise & remove any clusters that are too close to an edge
     # check location of cluster (looking for edge clusters)
@@ -54,9 +55,9 @@ screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, a
                 xm = round(mean(x),0), ym = round(mean(y),0))
     
     sc$n.id <- sc$id
-    sc$n.id[(sc$ym >= 1996 - edge.width) | (sc$ym <= edge.width) | 
-                (sc$xm >= 1996 - edge.width) | (sc$xm <= edge.width)] <- NA
-
+    sc$n.id[(sc$ym >= im.dims[2] - edge.width) | (sc$ym <= edge.width) | 
+                (sc$xm >= im.dims[1] - edge.width) | (sc$xm <= edge.width)] <- NA
+    
     blobs <- subs(blobs, sc[,c("id", "n.id")])
     
     # return array with numbered blobs
