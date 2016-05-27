@@ -5,8 +5,8 @@
 \title{Find lines in image}
 \usage{
 find.lines(im, k.size = 5, threshold.at = 5500, sm.size = 11,
-  min.length = 6, filter.at = list(cover = 0.5, filled = 20),
-  horizontal = F, dim.lines = F)
+  min.length = 6, midline = 992.5, filter.at = list(cover = 0.5, filled =
+  20), horizontal = F, dim.lines = F)
 }
 \arguments{
 \item{im}{2d image array to be convolved.}

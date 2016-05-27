@@ -5,7 +5,7 @@
 \title{Filter lines to retain only long ones}
 \usage{
 filter.lines(im, filter.at = list(cover = 0.5, filled = 20), edges = 20,
-  horizontal = F)
+  horizontal = F, midline = 992.5)
 }
 \arguments{
 \item{im}{2d image array after convolution, thresholding and smoothing}

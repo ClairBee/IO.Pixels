@@ -4,7 +4,7 @@
 \alias{lowess.per.column}
 \title{Per-column loess smoothing}
 \usage{
-lowess.per.column(image, span = 1/15)
+lowess.per.column(image, span = 1/15, midline = 992.5)
 }
 \arguments{
 \item{image}{Single-layer array image (1996x1996) to be fitted.}

@@ -63,7 +63,7 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
 #' @return Data frame containing maximum and minimum row identified as part of a line segment, and the range and proportion of each column covered by line segments.
 #' @export
 #' 
-summarise.lines <- function(im, horizontal = F) {
+summarise.lines <- function(im, horizontal = F, midline = 992.5) {
     
     xy <- data.frame(xyFromCell(m2r(im), which(getValues(m2r(im)) > 0)))
     
@@ -72,10 +72,10 @@ summarise.lines <- function(im, horizontal = F) {
                     filled = length(x), range = max(x) - min(x) + 1,
                     cover = filled / range)
     } else {
-        df <- rbind(ddply(xy[xy$y > 992.5,], .(col =x), summarise, panel = "U", ymin = min(y), ymax = max(y),
+        df <- rbind(ddply(xy[xy$y > midline,], .(col =x), summarise, panel = "U", ymin = min(y), ymax = max(y),
                           filled = length(x), range = max(y) - min(y) + 1,
                           cover = filled / range),
-                    ddply(xy[xy$y < 992.5,], .(col = x), summarise, panel = "L", ymin = min(y), ymax = max(y),
+                    ddply(xy[xy$y < midline,], .(col = x), summarise, panel = "L", ymin = min(y), ymax = max(y),
                           filled = length(x), range = max(y) - min(y) + 1,
                           cover = filled / range))
     }
@@ -92,7 +92,7 @@ summarise.lines <- function(im, horizontal = F) {
 #' @return image array with lines marked with separate indices for identification
 #' @export
 #' 
-filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges = 20, horizontal = F) {
+filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges = 20, horizontal = F, midline = 992.5) {
     
     df <- summarise.lines(im, horizontal = horizontal)
     
@@ -100,11 +100,11 @@ filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges =
     
     # if line ends are within 10px of panel centre or panel edge, reset to the centre/edge
     # (panel edges are cropped by convolution)
-    df$ymin[df$ymin %in% (993 + c(0:9))] <- 993
+    df$ymin[df$ymin %in% (ceiling(midline) + c(0:9))] <- ceiling(midline)
     df$ymin[df$ymin %in% (1 + c(0:9))] <- 1
     
-    df$ymax[df$ymax %in% (992 - c(0:9))] <- 992
-    df$ymax[df$ymax %in% (1996 - c(0:9))] <- 1996
+    df$ymax[df$ymax %in% (floor(midline) - c(0:9))] <- floor(midline)
+    df$ymax[df$ymax %in% (nrow(im) - c(0:9))] <- nrow(im)
     
     new.im <- array(0, dim = dim(im))
     
@@ -135,7 +135,7 @@ filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges =
 #' @return Image array with lines marked
 #' @export
 #' 
-find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.length = 6,
+find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.length = 6, midline = 992.5,
                        filter.at = list(cover = 0.5, filled = 20),
                        horizontal = F, dim.lines = F) {
     
@@ -149,7 +149,7 @@ find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.le
     sm <- smooth.lines(th, sm.size = sm.size, horizontal = horizontal, min.length = min.length)
     
     # filter out short line segments and return image of long segments identified
-    lines <- filter.lines(sm, filter.at = filter.at)
+    lines <- filter.lines(sm, filter.at = filter.at, midline = midline)
     
     return(lines)
 }
