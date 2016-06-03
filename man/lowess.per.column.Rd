@@ -4,12 +4,14 @@
 \alias{lowess.per.column}
 \title{Per-column loess smoothing}
 \usage{
-lowess.per.column(image, span = 1/15, midline = 992.5)
+lowess.per.column(image, span, midline = 992.5)
 }
 \arguments{
 \item{image}{Single-layer array image (1996x1996) to be fitted.}
 
-\item{span}{Span to be used for loess smoothing. Default is 1/15.}
+\item{span}{Span to be used for loess smoothing. Default is 1/ sqrt(n), with n taken to be the height of the midline.}
+
+\item{midline}{Midline of subpanels. Default is 992.5.}
 }
 \value{
 1996x1996 matrix of smoothed values.

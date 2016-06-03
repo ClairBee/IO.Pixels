@@ -175,7 +175,8 @@ minipanel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, uppe
 #' 
 #' Fit a loess spline to each column of the image using \link{\code{lowess}}. The upper and lower detector panels are treated separately.
 #' @param image Single-layer array image (1996x1996) to be fitted.
-#' @param span Span to be used for loess smoothing. Default is 1/15.
+#' @param span Span to be used for loess smoothing. Default is 1/ sqrt(n), with n taken to be the height of the midline.
+#' @param midline Midline of subpanels. Default is 992.5.
 #' @return 1996x1996 matrix of smoothed values.
 #' @export
 #' @examples
@@ -183,7 +184,7 @@ minipanel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, uppe
 #' smoothed.res <- panel.res - smoothed
 #' pixel.image(smoothed.res)
 #' s.hist(smoothed.res)
-lowess.per.column <- function(image, span = 1/15, midline = 992.5) {
+lowess.per.column <- function(image, span, midline = 992.5) {
     
     upper.midline <- ceiling(midline)
     lower.midline <- floor(midline)
@@ -193,6 +194,9 @@ lowess.per.column <- function(image, span = 1/15, midline = 992.5) {
     upper <- image[, upper.midline:upper.edge]
     lower <- image[, 1:lower.midline]
     
+    # default span: 1/ sqrt(n)
+    if(missing(span)) span <- 1/ sqrt(midline)
+        
     # apply lowess smoothing per column to each panel in turn
     upper.smoo <- do.call("rbind", lapply(apply(upper, 1, lowess, f = span), "[[", 2))
     lower.smoo <- do.call("rbind", lapply(apply(lower, 1, lowess, f = span), "[[", 2))
