@@ -3,7 +3,7 @@ Title: Functions for analysis of distribution of dead pixels (part of Inside Out
 Version: 0.0.0.9000
 Authors@R: person("Clair", "Barnes", email = "c.barnes@warwick.ac.uk", role = c("aut", "cre"))
 Description: Pre-processing and analysis functions to import and convert TIFF images and assess the distribution of dead pixels within them.
-Depends: tiff, spatstat, polyclip, XML, plyr, raster, reshape, MASS, SuppDists, igraph, mmand, abind
+Depends: tiff, spatstat, polyclip, XML, plyr, raster, reshape, MASS, SuppDists, igraph, mmand, abind, msm
 License: What license is it under?
 LazyData: true
 RoxygenNote: 5.0.1

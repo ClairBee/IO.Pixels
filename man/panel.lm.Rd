@@ -5,7 +5,7 @@
 \title{Per-panel linear regression}
 \usage{
 panel.lm(image, terms = "x + y", robust = F, left.pad = 2,
-  upper.pad = 20)
+  upper.pad = 20, rotate.lower = F)
 }
 \arguments{
 \item{image}{Single-layer array image (1996x1996) to be fitted.}
@@ -17,6 +17,8 @@ panel.lm(image, terms = "x + y", robust = F, left.pad = 2,
 \item{left.pad}{Integer value: how many pixels are cropped from left image edge? Default is 2.}
 
 \item{upper.pad}{Integer value: how many pixels are cropped from upper image edge? Default is 20.}
+
+\item{rotate.lower}{boolean: fit a model to the lower panels as they appear in the image, or rotate by 180 degrees to align amplifier coordinates with those of top panels? Default is F (fit models to image as is)}
 }
 \value{
 List containing the terms applied, a matrix of fitted values, and a matrix of model coefficients for each panel.

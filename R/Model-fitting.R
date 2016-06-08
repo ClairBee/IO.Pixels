@@ -94,6 +94,7 @@ he.spot.lm <- function(image, n = 2, order = 2, centre = c(1023.5, 992.5), robus
 #' @param robust Boolean: use robust regression (\link{\code{rlm}})? Default is F (use \link{\code{lm}} for regression).
 #' @param left.pad Integer value: how many pixels are cropped from left image edge? Default is 2.
 #' @param upper.pad Integer value: how many pixels are cropped from upper image edge? Default is 20.
+#' @param rotate.lower boolean: fit a model to the lower panels as they appear in the image, or rotate by 180 degrees to align amplifier coordinates with those of top panels? Default is F (fit models to image as is)
 #' @return List containing the terms applied, a matrix of fitted values, and a matrix of model coefficients for each panel.
 #' @export
 #' @examples
@@ -101,7 +102,7 @@ he.spot.lm <- function(image, n = 2, order = 2, centre = c(1023.5, 992.5), robus
 #' panel.lm <- panel.lm(circ.res, "y")                 # finds coefficients of intercept and y.
 #' panel.res <- circ.res - panel.lm$fitted.values
 #' pixel.image(panel.res)
-panel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, upper.pad = 20) {
+panel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, upper.pad = 20, rotate.lower = F) {
     
     # convert formula string to lower case to ensure match
     terms <- tolower(terms)
@@ -114,6 +115,9 @@ panel.lm <- function (image, terms = "x + y", robust = F, left.pad = 2, upper.pa
     sp <- subpanels(image)
     
     for (s in 1:32) {
+        if (s > 16 & rotate.lower) {
+            sp[,,s] <- array(rev(sp[,,s]), dim = dim(sp[,,s]))
+            }
         df <- melt(sp[,,s])
         colnames(df) <- c("x", "y", "value")
         
