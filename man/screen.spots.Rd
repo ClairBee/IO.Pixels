@@ -2,32 +2,32 @@
 % Please edit documentation in R/Screen-spots.R
 \name{screen.spots}
 \alias{screen.spots}
-\title{Identify dim spots on screen}
+\title{Identify pixels covered by spots on screen}
 \usage{
-screen.spots(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10,
-  auto.threshold = T)
+screen.spots(bright.image, smooth.span = 1/5, min.diam = 5,
+  midline = 992.5, enlarge = F, auto.threshold = T)
 }
 \arguments{
-\item{dt}{Integer/string specifying image date to be imported}
+\item{bright.image}{Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.}
 
-\item{smooth.span}{Smoothing span to be used for Lowess. Default is 1/5}
+\item{smooth.span}{Smoothing span to be used for Lowess. Default is 1/5 (this is a lower proportion than the standard default, since the aim is to 'skim over' any deviations from a smooth curve, not to fit them)}
 
 \item{min.diam}{Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.}
 
-\item{edge.width}{Integer: dim spots whose midpoint falls within this distance of the detector edge will be removed from the list of screen defects.}
+\item{midline}{Integer: y-coordinate of horizontal panel midline, dividing electrically separates panels. Per-column Lowess smoothing stops at the midline.}
+
+\item{enlarge}{Boolean: should identified spots be dilated (enlarged) by the structuring element to smooth the edges and cover the largest area possible? default is T.}
+
+\item{auto.threshold}{Boolean: should screen spots be thresholded using k-means clustering (T) or by thresholding at the mean value - 3sd (F)? Default is T (auto-thresholding).}
 }
 \value{
-Raster object with clumps of dim pixels marked as individual objects
+Matrix of XY coordinates of pixels identified as probable screen spots
 }
 \description{
-Find dim spots of a given size or larger, in a single white image
-}
-\details{
-Requires that \code{pw.m} be available in the global environment, as by running \link{\code{load.pixel.means()}}
+Find dim spots of a given size or larger in a single bright image, and return their x and y coordinates
 }
 \examples{
-load.pixel.maps()
-ds <- screen.spots(160314)
+bp <- data.frame(screen.spots(pw.m[,,"white", "160430"]), type = "screen.spot")
 
 }
 

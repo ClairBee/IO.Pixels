@@ -26,25 +26,35 @@ edge.px <- function(im, edge.width = 10) {
 
 #' Identify pixels with no x-ray response
 #' 
-#' Identify pixels whose behaviour in the grey or white images is the same as in the black images (no response to source)
-#' @details Requires existence of \code{pw.m} in global environment.
-#' @param dt String or integer date, format yymmdd.
-#' @param limit Quantile of black pixel population to be used as cutoff.
+#' Identify pixels whose behaviour in an illuminated image is the same as in a dark image (ie. pixels that exhibit no response to source)
+#' @param bright.image Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.
+#' @param dark.image Image array containing a dark image (no x-ray exposure), used to calibrate 'normal' behaviour of pixels when not exposed to an x-ray source.
+#' @param limit Quantile of black pixel population to be used as cutoff for 'normal' behaviour. Default is 0.0005, capturing central 99.9% of distribution.
 #' @return Matrix of coordinates of non-responsive pixels
 #' @export
 #' @examples
 #' qq <- no.response(160314, limit = 0.001)
-no.response <- function(dt, limit = 0.01) {
-    dt <- toString(dt)
+no.response <- function(bright.image, dark.image, limit = 0.0005, exclude.edge = 10) {
+
+    nc <- ncol(bright.image)
     
-    nc <- ncol(pw.m[,,,dt])
+    bn <- qJohnson(c(limit, 1-limit), JohnsonFit(dark.image[!is.na(dark.image)]))
     
-    bn <- qJohnson(c(limit, 1-limit), JohnsonFit(pw.m[,,"black", dt][!is.na(pw.m[,,"black", dt])]))
+    un <- rbind(which(matrix(findInterval(bright.image, bn), ncol = nc) == 1, arr.ind = T))
     
-    un <- rbind(which(matrix(findInterval(pw.m[,,"grey", dt], bn), ncol = nc) == 1, arr.ind = T),
-                which(matrix(findInterval(pw.m[,,"white", dt], bn), ncol = nc) == 1, arr.ind = T))
-    return(un[!duplicated(un),])
+    # filter out any pixels that fall in excluded edge region
+    un[un[,1] > exclude.edge & 
+           un[,2] > exclude.edge & 
+           un[,1] < ncol(bright.image) - exclude.edge &
+           un[,2] < nrow(bright.image) - exclude.edge, ]
+    
+    return(un)
 }
+
+
+# Get bright & dim pixels
+#' For a single image array, return a list of thresholds to categorise very bright, bright, slightly bright, slightly dim, dim, and very dim pixels. Edge pixels are ignored for the purpose of this calculation.
+
 
 
 #' Get cutoffs for bright/dim pixels
@@ -114,40 +124,6 @@ get.dim.bright.px <- function(im) {
     # remove duplicates (most severe category will be retained)
     bp <- bp[!duplicated(bp[,1:2]),]
     return(bp)
-}
-
-
-#' Identify hot pixels
-#' 
-#' Identify hot pixels in an image (any pixel with maximum possible value in black image)
-#' @details Requires existence of image array \code{pw.m}
-#' @param dt Integer or string (format yymmdd) giving date to identify hot pxels in.
-#' @return Data frame containing coordinates of hot pixels, with a factor indicating the classification
-#' @export
-#' 
-hot.px <- function(dt) {
-    dt <- toString(dt)
-    data.frame(which(pw.m[, , "black", dt] == 65535, arr.ind = T), type = "hot")
-}
-
-
-
-#' Identify dead pixels
-#' 
-#' Identify dead pixels in an image (any pixel with 0 value in white image)
-#' @details Requires existence of image array \code{pw.m}
-#' @param dt Integer or string (format yymmdd) giving date to identify hot pxels in.
-#' @return Data frame containing coordinates of dead pixels, with a factor indicating the classification
-#' @export
-#' 
-dead.px <- function(dt) {
-    dt <- toString(dt)
-    
-    if (length(which(pw.m[, , "white", dt] == 0)) == 0) {
-        return(NULL)
-    } else {
-        return(data.frame(which(pw.m[, , "white", dt] == 0, arr.ind = T), type = "dead"))
-    }
 }
 
 

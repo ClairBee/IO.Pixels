@@ -4,21 +4,20 @@
 \alias{no.response}
 \title{Identify pixels with no x-ray response}
 \usage{
-no.response(dt, limit = 0.01)
+no.response(bright.image, dark.image, limit = 5e-04, exclude.edge = 10)
 }
 \arguments{
-\item{dt}{String or integer date, format yymmdd.}
+\item{bright.image}{Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.}
 
-\item{limit}{Quantile of black pixel population to be used as cutoff.}
+\item{dark.image}{Image array containing a dark image (no x-ray exposure), used to calibrate 'normal' behaviour of pixels when not exposed to an x-ray source.}
+
+\item{limit}{Quantile of black pixel population to be used as cutoff for 'normal' behaviour. Default is 0.0005, capturing central 99.9% of distribution.}
 }
 \value{
 Matrix of coordinates of non-responsive pixels
 }
 \description{
-Identify pixels whose behaviour in the grey or white images is the same as in the black images (no response to source)
-}
-\details{
-Requires existence of \code{pw.m} in global environment.
+Identify pixels whose behaviour in an illuminated image is the same as in a dark image (ie. pixels that exhibit no response to source)
 }
 \examples{
 qq <- no.response(160314, limit = 0.001)

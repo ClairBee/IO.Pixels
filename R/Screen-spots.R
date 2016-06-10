@@ -1,28 +1,29 @@
 
-#' Identify dim spots on screen
-#'
-#' Find dim spots of a given size or larger, in a single white image
-#' @details Requires that \code{pw.m} be available in the global environment, as by running \link{\code{load.pixel.means()}}
-#' @param dt Integer/string specifying image date to be imported
-#' @param smooth.span Smoothing span to be used for Lowess. Default is 1/5
+#' Identify pixels covered by spots on screen
+#' 
+#' Find dim spots of a given size or larger in a single bright image, and return their x and y coordinates
+#' @param bright.image Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.
+#' @param smooth.span Smoothing span to be used for Lowess. Default is 1/5 (this is a lower proportion than the standard default, since the aim is to 'skim over' any deviations from a smooth curve, not to fit them)
 #' @param min.diam Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.
-#' @param edge.width Integer: dim spots whose midpoint falls within this distance of the detector edge will be removed from the list of screen defects.
-#' @return Raster object with clumps of dim pixels marked as individual objects
+#' @param midline Integer: y-coordinate of horizontal panel midline, dividing electrically separates panels. Per-column Lowess smoothing stops at the midline.
+#' @param enlarge Boolean: should identified spots be dilated (enlarged) by the structuring element to smooth the edges and cover the largest area possible? default is T.
+#' @param auto.threshold Boolean: should screen spots be thresholded using k-means clustering (T) or by thresholding at the mean value - 3sd (F)? Default is T (auto-thresholding).
+#' @return Matrix of XY coordinates of pixels identified as probable screen spots
 #' @export
 #' @examples
-#' load.pixel.maps()
-#' ds <- screen.spots(160314)
-#' 
-screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T) {
-    dt <- toString(dt)
-    im <- pw.m[,,"white", dt]
-    im.dims <- dim(im)
+#' bp <- data.frame(screen.spots(pw.m[,,"white", "160430"]), type = "screen.spot")
+#'
+screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 992.5, enlarge = F, auto.threshold = T) {
+    
+    im.dims <- dim(bright.image)
     
     sk <- shapeKernel(c(min.diam, min.diam), type = "disc")
     
     # apply lowess smoothing
-    smoo <- lowess.per.column(im, span = smooth.span)
-    res <- im - smoo
+    # don't use default smoothing in this case - don't want smoother to be drawn into dips, so use lower proportion
+    smoo <- lowess.per.column(bright.image, midline = midline, span = smooth.span)
+    
+    res <- bright.image - smoo
     
     # flatten further by setting brighter pixels to mean value 
     res[res > mean(res)] <- mean(res)
@@ -36,60 +37,57 @@ screen.spots <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, a
     # use k-means thresholding to identify spots
     # use 1-thresholded value to assign 1 to spots, 0 to background
     if (auto.threshold) {
-        dim <- array(1, dim = im.dims) - threshold(eroded, method = "kmeans")
+        dim.sp <- array(1, dim = im.dims) - threshold(eroded, method = "kmeans")
     } else {
-        dim <- array(1, dim = im.dims) - threshold(eroded, mean(eroded) - 3*sd(eroded))
+        dim.sp <- array(1, dim = im.dims) - threshold(eroded, mean(eroded) - 3*sd(eroded))
     }
+    
+    # if spot identification should be as large as possible, 
+    if (enlarge) {dim.sp <- dilated(dim.sp)}
+    
+    if (sum(dim.sp == 1) == 0) {
+        return(NULL)
+    } else {
+        return(which(dim.sp == 1, arr.ind = T))
+    }
+}
+
+
+
+# identify individual screen spots from list of coordinates
+#' 
+#' Convert a list of screen spot coordinates into an image array and summary table
+#' @param ss.coords Matrix of XY coordinates of identified screen spots, as returned by \code{\link{screen.spots}}
+#' @param im.dims Dimensions of image on which to display coordinates
+#' @param ignore.edges Integer: width of border around panel within which pixels are assumed to be dim because of their proximity to the edge, rather than because of a spot on the screen. Spots whose midpoint falls within this border will be removed. Default is 10.
+#' @return List containing an image array of the specified dimensions, and a data frame summarising each spot's midpoint and size.
+#' @export
+#' @examples
+#' image(screen.spot.clusters(screen.spots(pw.m[,,"white", "160430"]))$spots)
+#' 
+screen.spot.clusters <- function(ss.coords, im.dims = c(1996, 1996), ignore.edges = 10) {
+    
+    ss.im <- bpx2im(data.frame(ss.coords, type = 1), im.dim = im.dims)
     
     #------------------------------------------------------------------------------
     # convert to raster & clump values to identify individual spots
     # (values need to be reordered to maintain image orientation)
-    blobs <- clump(raster(t(dim[,im.dims[2]:1]),  xmn = 0.5, xmx = im.dims[1] + 0.5, ymn = 0.5, ymx = im.dims[2] + 0.5), dir = 4)
+    blobs <- clump(m2r(ss.im), dir = 4)
     
     # summarise & remove any clusters that are too close to an edge
     # check location of cluster (looking for edge clusters)
     sc <- ddply(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))),
                            id = getValues(blobs)[!is.na(getValues(blobs))]),
                 .(id), summarise, 
-                xmin = min(x), xmax = max(x), ymin = min(y), ymax = max(y),
-                xm = round(mean(x),0), ym = round(mean(y),0))
+                x.midpoint = round(mean(x),0), y.midpoint = round(mean(y),0),
+                size = length(x))
     
     sc$n.id <- sc$id
-    sc$n.id[(sc$ym >= im.dims[2] - edge.width) | (sc$ym <= edge.width) | 
-                (sc$xm >= im.dims[1] - edge.width) | (sc$xm <= edge.width)] <- NA
+    sc$n.id[(sc$y.midpoint >= im.dims[2] - ignore.edges) | (sc$y.midpoint <= ignore.edges) | 
+                (sc$x.midpoint >= im.dims[1] - ignore.edges) | (sc$x.midpoint <= ignore.edges)] <- NA
     
     blobs <- subs(blobs, sc[,c("id", "n.id")])
     
     # return array with numbered blobs
-    return(blobs)
-}
-
-
-#' Get coordinates of pixels covered by spots on screen
-#' 
-#' Find dim spots of a given size or larger in a single white image, and return their x and y coordinates
-#' @details Requires that \code{pw.m} be available in the global environment, as by running \link{\code{load.pixel.means()}}
-#' @param dt Integer/string specifying image date to be imported
-#' @param smooth.span Smoothing span to be used for Lowess. Default is 1/5
-#' @param min.diam Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.
-#' @param edge.width Integer: dim spots whose midpoint falls within this distance of the detector edge will be removed from the list of screen defects.
-#' @return Data frame containing XY coordinates and type definition as 'screen spot'
-#' @export
-#' @examples
-#' dt <- "160314"
-#' bp <- rbind(get.dim.bright.px(res[, , "grey", dt]),
-#'             screen.spots.xy(dt))
-#'
-screen.spots.xy <- function(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T) {
-    
-    zz <- screen.spots(dt, smooth.span = 1/5, min.diam = 5, edge.width = 10, auto.threshold = T)
-    
-    if (all(is.na(getValues(zz)))) {
-        # return empty data frame in order to not 
-        return(data.frame("row" = double(), "col" = double(), "type" = character()))
-    } else {
-        # extract coordinates of cells covered by spots identified, return as data frame
-        return(setNames(data.frame(xyFromCell(zz, which(!is.na(getValues(zz)))), type = "screen spot"),
-                 c("row", "col", "type")))
-    }
+    return(list(spots = blobs, summary = sc[!is.na(sc$n.id),1:4]))
 }
