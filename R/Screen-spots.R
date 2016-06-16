@@ -58,9 +58,13 @@ screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline 
         sc$n.id <- sc$id
         sc$n.id[(sc$y.midpoint >= im.dims[2] - ignore.edges) | (sc$y.midpoint <= ignore.edges) | 
                     (sc$x.midpoint >= im.dims[1] - ignore.edges) | (sc$x.midpoint <= ignore.edges)] <- NA
-        blobs <- subs(blobs, sc[,c("id", "n.id")])
         
-        dim.sp <- bpx2im(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))), type = 1))
+        if (nrow(sc[!is.na(sc$n.id),]) > 0) {
+            blobs <- subs(blobs, sc[,c("id", "n.id")])
+            dim.sp <- bpx2im(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))), type = 1))
+        } else {
+            dim.sp <- array(0, dim = im.dims)
+        }
     }
     
     if (sum(dim.sp == 1) == 0) {
