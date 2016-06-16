@@ -5,7 +5,7 @@
 \title{Identify pixels covered by spots on screen}
 \usage{
 screen.spots(bright.image, smooth.span = 1/5, min.diam = 5,
-  midline = 992.5, enlarge = F, auto.threshold = T)
+  midline = 992.5, enlarge = F, auto.threshold = T, ignore.edges = 10)
 }
 \arguments{
 \item{bright.image}{Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.}

@@ -11,7 +11,7 @@ no.response(bright.image, dark.image, limit = 5e-04, exclude.edge = 10)
 
 \item{dark.image}{Image array containing a dark image (no x-ray exposure), used to calibrate 'normal' behaviour of pixels when not exposed to an x-ray source.}
 
-\item{limit}{Quantile of black pixel population to be used as cutoff for 'normal' behaviour. Default is 0.0005, capturing central 99.9% of distribution.}
+\item{limit}{Quantile of black pixel population to be used as cutoff for 'normal' behaviour. Default is 0.0005, capturing central 99.9percent of distribution.}
 }
 \value{
 Matrix of coordinates of non-responsive pixels

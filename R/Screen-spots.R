@@ -13,7 +13,7 @@
 #' @examples
 #' bp <- data.frame(screen.spots(pw.m[,,"white", "160430"]), type = "screen.spot")
 #'
-screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 992.5, enlarge = F, auto.threshold = T) {
+screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 992.5, enlarge = F, auto.threshold = T, ignore.edges = 10) {
     
     im.dims <- dim(bright.image)
     
@@ -43,7 +43,25 @@ screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline 
     }
     
     # if spot identification should be as large as possible, 
-    if (enlarge) {dim.sp <- dilated(dim.sp)}
+    if (enlarge) {dim.sp <- dilate(dim.sp, sk)}
+    
+    # remove any spots whose midpoint lies within the edge region
+    if (ignore.edges > 0) {
+        blobs <- clump(m2r(dim.sp), dir = 4)
+        
+        sc <- ddply(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))),
+                               id = getValues(blobs)[!is.na(getValues(blobs))]),
+                    .(id), summarise, 
+                    x.midpoint = round(mean(x),0), y.midpoint = round(mean(y),0),
+                    size = length(x))
+        
+        sc$n.id <- sc$id
+        sc$n.id[(sc$y.midpoint >= im.dims[2] - ignore.edges) | (sc$y.midpoint <= ignore.edges) | 
+                    (sc$x.midpoint >= im.dims[1] - ignore.edges) | (sc$x.midpoint <= ignore.edges)] <- NA
+        blobs <- subs(blobs, sc[,c("id", "n.id")])
+        
+        dim.sp <- bpx2im(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))), type = 1))
+    }
     
     if (sum(dim.sp == 1) == 0) {
         return(NULL)

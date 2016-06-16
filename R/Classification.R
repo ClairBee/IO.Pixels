@@ -29,7 +29,7 @@ edge.px <- function(im, edge.width = 10) {
 #' Identify pixels whose behaviour in an illuminated image is the same as in a dark image (ie. pixels that exhibit no response to source)
 #' @param bright.image Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.
 #' @param dark.image Image array containing a dark image (no x-ray exposure), used to calibrate 'normal' behaviour of pixels when not exposed to an x-ray source.
-#' @param limit Quantile of black pixel population to be used as cutoff for 'normal' behaviour. Default is 0.0005, capturing central 99.9% of distribution.
+#' @param limit Quantile of black pixel population to be used as cutoff for 'normal' behaviour. Default is 0.0005, capturing central 99.9percent of distribution.
 #' @return Matrix of coordinates of non-responsive pixels
 #' @export
 #' @examples
@@ -43,12 +43,13 @@ no.response <- function(bright.image, dark.image, limit = 0.0005, exclude.edge =
     un <- rbind(which(matrix(findInterval(bright.image, bn), ncol = nc) == 1, arr.ind = T))
     
     # filter out any pixels that fall in excluded edge region
-    un[un[,1] > exclude.edge & 
-           un[,2] > exclude.edge & 
-           un[,1] < ncol(bright.image) - exclude.edge &
-           un[,2] < nrow(bright.image) - exclude.edge, ]
+    un[un[,1] <= exclude.edge, ] <- NA
+    un[un[,1] >= ncol(bright.image) - exclude.edge, ] <- NA
     
-    return(un)
+    un[un[,2] <= exclude.edge, ] <- NA
+    un[un[,2] >= nrow(bright.image) - exclude.edge,] <- NA
+    
+    return(un[!is.na(un[,1]),])
 }
 
 
