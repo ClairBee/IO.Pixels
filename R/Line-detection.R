@@ -65,19 +65,21 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
 #' 
 summarise.lines <- function(im, horizontal = F, midline = 992.5) {
     
-    xy <- data.frame(xyFromCell(m2r(im), which(getValues(m2r(im)) > 0)))
+    # convert to raster & clump to get line IDs
+    lines <- clump(m2r(sm), dir = 4)
+    
+    xy <- data.frame(xyFromCell(lines, which(!is.na(getValues(lines)))),
+                     id = getValues(lines)[!is.na(getValues(lines))])
     
     if (horizontal) {
-        df <- ddply(xy, .(row = y), summarise, xmin = min(x), xmax = max(x),
-                    filled = length(x), range = max(x) - min(x) + 1,
-                    cover = filled / range)
+        # labels are incorrect, but much easier to work with same column names
+        df <- ddply(xy, .(id, col = y), summarise, 
+                    ymin = min(x), ymax = max(x), length = length(x))
     } else {
-        df <- rbind(ddply(xy[xy$y > midline,], .(col =x), summarise, panel = "U", ymin = min(y), ymax = max(y),
-                          filled = length(x), range = max(y) - min(y) + 1,
-                          cover = filled / range),
-                    ddply(xy[xy$y < midline,], .(col = x), summarise, panel = "L", ymin = min(y), ymax = max(y),
-                          filled = length(x), range = max(y) - min(y) + 1,
-                          cover = filled / range))
+        df <- rbind(ddply(xy[xy$y > midline,], .(id, col = x), summarise, panel = "U",
+                          ymin = min(y), ymax = max(y), length = length(x)),
+                    ddply(xy[xy$y < midline,], .(id, col = x), summarise, panel = "L",
+                          ymin = min(y), ymax = max(y), length = length(x)))
     }
 
     return(df)
@@ -92,20 +94,42 @@ summarise.lines <- function(im, horizontal = F, midline = 992.5) {
 #' @return image array with lines marked with separate indices for identification
 #' @export
 #' 
-filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges = 20, horizontal = F, midline = 992.5) {
+filter.lines <- function(im, edges = 10, min.length = 10, horizontal = F, midline = 992.5) {
     
-    df <- summarise.lines(im, horizontal = horizontal)
+    df <- summarise.lines(im, horizontal = horizontal, midline = midline)
     
-    df <- df[df$cover > filter.at$cover & df$filled > filter.at$filled,]
+    err <- "Still to be recoded... no horizontal lines when checking manually, so haven't prioritised automation"
+    # remove line segments within 10 columns of panel edge
+    if (horizontal) {
+        df <- df[df$col > edges & df$col < dim(im)[2] - edges,]
+    } else {
+        df <- df[df$col > edges & df$col < dim(im)[1] - edges,]
+    }
+    
+    # remove line segments less than 10 in length
+    # could relate to kernel parameters - what is likely result of convolution & smoothing?
+    df <- df[df$length > min.length,]
     
     # if line ends are within 10px of panel centre or panel edge, reset to the centre/edge
     # (panel edges are cropped by convolution)
-    df$ymin[df$ymin %in% (ceiling(midline) + c(0:9))] <- ceiling(midline)
-    df$ymin[df$ymin %in% (1 + c(0:9))] <- 1
+    # could relate this to smoothing parameters - what is distance likely to be?
+
+        df$ymin[df$ymin %in% (ceiling(midline) + c(0:9))] <- ceiling(midline)
+        df$ymin[df$ymin %in% (1 + c(0:9))] <- 1
+        
+        df$ymax[df$ymax %in% (floor(midline) - c(0:9))] <- floor(midline)
+        df$ymax[df$ymax %in% (nrow(im) - c(0:9))] <- nrow(im)
+
+
+    # recalculate segment lengths based on new endpoints
+        df$length <- df$ymax - df$ymin + 1
     
-    df$ymax[df$ymax %in% (floor(midline) - c(0:9))] <- floor(midline)
-    df$ymax[df$ymax %in% (nrow(im) - c(0:9))] <- nrow(im)
+    # remove any segments less than 20px in length - UNLESS associated with longer segment
+    long <- df[df$length > 20,]
+    df <- df[df$col %in% long$col,]
     
+    
+    # create new image array containing lines identified
     new.im <- array(0, dim = dim(im))
     
     if (nrow(df) > 0) {
@@ -113,10 +137,6 @@ filter.lines <- function(im, filter.at = list(cover = 0.5, filled = 20), edges =
             new.im[df$col[i], df$ymin[i]:df$ymax[i]] <- i
         }
     }
-
-    # ignore any lines that are within 20px of a panel edge
-    
-    
     return(new.im)
 }
 
