@@ -4,7 +4,7 @@
 \alias{smooth.lines}
 \title{Smooth lines}
 \usage{
-smooth.lines(im, sm.size = 11, horizontal = F, min.length = 6)
+smooth.lines(im, sm.size = 11, horizontal = F, min.segment = 6)
 }
 \arguments{
 \item{im}{2d image array to be convolved.}
@@ -13,7 +13,7 @@ smooth.lines(im, sm.size = 11, horizontal = F, min.length = 6)
 
 \item{horizontal}{Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.}
 
-\item{min.length}{Integer: minimum number of pixels to accept as a line after smoothing.}
+\item{min.segment}{Integer: minimum number of pixels to accept as a line after smoothing.}
 }
 \value{
 Smoothed and thresholded image

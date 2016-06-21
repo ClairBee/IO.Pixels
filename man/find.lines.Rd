@@ -5,8 +5,8 @@
 \title{Find lines in image}
 \usage{
 find.lines(im, k.size = 5, threshold.at = 5500, sm.size = 11,
-  min.length = 6, midline = 992.5, filter.at = list(cover = 0.5, filled =
-  20), horizontal = F, dim.lines = F)
+  min.segment = 6, midline = 992.5, edges = 10, min.line = 10,
+  trim.ends = T, horizontal = F, dim.lines = F)
 }
 \arguments{
 \item{im}{2d image array to be convolved.}
@@ -17,7 +17,9 @@ find.lines(im, k.size = 5, threshold.at = 5500, sm.size = 11,
 
 \item{sm.size}{Length of (linear) kernel to use. Default is 11.}
 
-\item{min.length}{Integer: minimum number of pixels to accept as a line after smoothing.}
+\item{min.segment}{Integer: minimum number of pixels to accept as a line segment after smoothing.}
+
+\item{min.line}{Integer: minimum number of pixels to accept as a single line during filtering.}
 
 \item{horizontal}{Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.}
 

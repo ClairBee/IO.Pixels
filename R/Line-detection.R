@@ -34,11 +34,11 @@ convolve.lines <- function(im, k.size = 5, horizontal = F, dim.lines = F) {
 #' @param im 2d image array to be convolved.
 #' @param sm.size Length of (linear) kernel to use. Default is 11.
 #' @param horizontal Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.
-#' @param min.length Integer: minimum number of pixels to accept as a line after smoothing.
+#' @param min.segment Integer: minimum number of pixels to accept as a line after smoothing.
 #' @return Smoothed and thresholded image
 #' @export
 #' 
-smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
+smooth.lines <- function(im, sm.size = 11, horizontal = F, min.segment = 6) {
     
     # define kernel to be used in filtering
     k <- matrix(rep(1, sm.size), ncol = 1)
@@ -50,7 +50,7 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
     sm <- r2m(focal(m2r(im), k))
     
     # threshold to remove short line fragments
-    threshold(sm, level = min.length - 0.5)
+    threshold(sm, level = min.segment - 0.5)
 }
 
 
@@ -66,7 +66,7 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.length = 6) {
 summarise.lines <- function(im, horizontal = F, midline = 992.5) {
     
     # convert to raster & clump to get line IDs
-    lines <- clump(m2r(sm), dir = 4)
+    lines <- clump(m2r(im), dir = 4)
     
     xy <- data.frame(xyFromCell(lines, which(!is.na(getValues(lines)))),
                      id = getValues(lines)[!is.na(getValues(lines))])
@@ -94,7 +94,7 @@ summarise.lines <- function(im, horizontal = F, midline = 992.5) {
 #' @return image array with lines marked with separate indices for identification
 #' @export
 #' 
-filter.lines <- function(im, edges = 10, min.length = 10, horizontal = F, midline = 992.5) {
+filter.lines <- function(im, edges = 10, min.line = 10, horizontal = F, midline = 992.5, trim.ends.by = 2) {
     
     df <- summarise.lines(im, horizontal = horizontal, midline = midline)
     
@@ -108,7 +108,7 @@ filter.lines <- function(im, edges = 10, min.length = 10, horizontal = F, midlin
     
     # remove line segments less than 10 in length
     # could relate to kernel parameters - what is likely result of convolution & smoothing?
-    df <- df[df$length > min.length,]
+    df <- df[df$length > min.line,]
     
     # if line ends are within 10px of panel centre or panel edge, reset to the centre/edge
     # (panel edges are cropped by convolution)
@@ -128,7 +128,11 @@ filter.lines <- function(im, edges = 10, min.length = 10, horizontal = F, midlin
     long <- df[df$length > 20,]
     df <- df[df$col %in% long$col,]
     
-    
+    # trim line ends to remove 'smoothed' area left over from convolution
+    df$ymin[!(df$ymin %in% c(ceiling(midline),1))] <- df$ymin[!(df$ymin %in% c(ceiling(midline),1))] + trim.ends.by
+
+    df$ymax[!(df$ymax %in% c(floor(midline), dim(im)[2]))] <- df$ymax[!df$ymax %in% c(floor(midline), dim(im)[2])] - trim.ends.by
+
     # create new image array containing lines identified
     new.im <- array(0, dim = dim(im))
     
@@ -151,14 +155,15 @@ filter.lines <- function(im, edges = 10, min.length = 10, horizontal = F, midlin
 #' @param horizontal Boolean: look for horizontal lines (T) instead of vertical (F)? Default is F, look for vertical lines.
 #' @param dim.lines Boolean: look for lines of dim pixels (T) instead of bright (F)? Default is F, enhance bright lines.
 #' @param sm.size Length of (linear) kernel to use. Default is 11.
-#' @param min.length Integer: minimum number of pixels to accept as a line after smoothing.
+#' @param min.segment Integer: minimum number of pixels to accept as a line segment after smoothing.
+#' @param min.line Integer: minimum number of pixels to accept as a single line during filtering.
 #' @return Image array with lines marked
 #' @export
 #' 
-find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.length = 6, midline = 992.5,
-                       filter.at = list(cover = 0.5, filled = 20),
+find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.segment = 6, midline = 992.5,
+                       edges = 10, min.line = 10, trim.ends = T,
                        horizontal = F, dim.lines = F) {
-    
+
     # perform specified convolution
     conv <- convolve.lines(im, k.size = k.size, horizontal = horizontal, dim.lines = dim.lines)
     
@@ -166,10 +171,11 @@ find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.le
     th <- threshold(conv, level = threshold.at)
     
     # smooth & repair lines
-    sm <- smooth.lines(th, sm.size = sm.size, horizontal = horizontal, min.length = min.length)
+    sm <- smooth.lines(th, sm.size = sm.size, horizontal = horizontal, min.segment = min.segment)
     
     # filter out short line segments and return image of long segments identified
-    lines <- filter.lines(sm, filter.at = filter.at, midline = midline)
+    lines <- filter.lines(sm, edges = 10, min.line = 10, horizontal = horizontal, 
+                          midline = midline, trim.ends.by = floor(k.size / 2))
     
     return(lines)
 }

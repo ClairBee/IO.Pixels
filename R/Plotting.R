@@ -211,9 +211,9 @@ panel.edges <- function(left.crop = 2, upper.crop = 20, width = 128, height = 10
 #' draw.panels()            # marks specified panel boundaries
 #' 
 #' 
-draw.panels <- function(p = panel.edges()) {
-    abline(h = p$y - 0.5)
-    abline(v = p$x - 0.5)
+draw.panels <- function(p = panel.edges(), ...) {
+    abline(h = p$y - 0.5, ...)
+    abline(v = p$x - 0.5, ...)
 }
 
 
@@ -280,4 +280,31 @@ s.hist <- function(data, scale = sd.levels(data), scale.colours = sd.colours(), 
     # add colours to indicate scale of pixel map
     cl <- cut(xlim[1]:xlim[2], scale)
     points(xlim[1]:xlim[2], rep(-600, length(xlim[1]:xlim[2])), pch = 15, col = scale.colours[cl])
+}
+
+
+#' Plot focal area
+#' 
+#' Create pixel image of area surrounding a point of interest. Pixel values are labelled and bad pixels identified highlighted
+#' @param im 2d image array to plot
+#' @param centre Vector of x and y coordinates of pixel of particular interest
+#' @param surround Integer: set size of area surrounding pixel of interest to be displayed. Default is 5, which displays an 11x11 square centred on the pixel of interest.
+#' @param dp Integer: display pixel values to how many decimal places? Default is 1.
+#' @param scale.by Integer: divide pixel values by this number for easier display and comparison. Default is 1000, so a value of 65535 will be displayed as 65.5
+#' @param lbl.cex Magnification factor to apply to labels in each cell. Default is 0.7
+#' @param bad.px Optional bad pixel map to be used to highlight any pixels in the display area that have been identified as defective.
+#' @param bpx.cex Magnification factor to apply to symbol used to highlight bad pixels. Default is 2.5
+#' @param ... Additional optional graphical arguments
+#' @export
+#' 
+focal.plot <- function(im, centre, surround = 5, dp = 1, scale.by = 1000, lbl.cex = 0.7, bad.px, bpx.cex = 2.5, ...) {
+    
+    ff <- get.focus(data.frame(x = centre[1], y = centre[2]), surround = surround)
+    
+    pixel.image(im, xlim = range(ff[,1]), ylim = range(ff[,2]), ...)
+    text(ff, labels = round(im[ff]/scale.by, dp), cex = lbl.cex)
+    
+    if (!missing(bad.px)) {
+        points(bad.px[,1:2], pch = 0, cex = bpx.cex)
+    }
 }

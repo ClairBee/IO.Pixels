@@ -4,8 +4,8 @@
 \alias{filter.lines}
 \title{Filter lines to retain only long ones}
 \usage{
-filter.lines(im, edges = 10, min.length = 10, horizontal = F,
-  midline = 992.5)
+filter.lines(im, edges = 10, min.line = 10, horizontal = F,
+  midline = 992.5, trim.ends.by = 2)
 }
 \arguments{
 \item{im}{2d image array after convolution, thresholding and smoothing}

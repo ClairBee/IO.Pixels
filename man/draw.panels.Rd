@@ -4,7 +4,7 @@
 \alias{draw.panels}
 \title{Add panel edges to plot}
 \usage{
-draw.panels(p = panel.edges())
+draw.panels(p = panel.edges(), ...)
 }
 \arguments{
 \item{p}{List containing y, a named vector of y-coordinates of panel corners, and x, a named vector of x-coordinates of panel corners.}
