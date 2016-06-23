@@ -181,3 +181,17 @@ r2m <- function(rast) {
 med.diffs <- function(im) {
     im - r2m(focal(m2r(im), matrix(rep(1, 9), ncol = 3), fun = median))
 }
+
+
+#' Summarise bad pixels for each acquisition
+#' 
+#' @export
+#' 
+summarise.bpx <- function(bp, by = "type") {
+    
+    df <- rbind.fill(lapply(lapply(bp, "[", by), function(m) data.frame(t(as.matrix(table(m))))))
+    rownames(df) <- names(bp)
+    df
+}
+
+

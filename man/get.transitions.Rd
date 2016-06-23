@@ -4,7 +4,7 @@
 \alias{get.transitions}
 \title{Get transition matrices for bad pixel maps}
 \usage{
-get.transitions(bpx)
+get.transitions(bp)
 }
 \arguments{
 \item{bpx}{List of dataframes containing bad pixel coordinates and types}

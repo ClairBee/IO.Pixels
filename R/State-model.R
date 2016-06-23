@@ -6,7 +6,7 @@
 #' @return List of tables showing movement between states from one acquisition to the next
 #' @export
 #' 
-get.transitions <- function(bpx) {
+get.transitions <- function(bp) {
     tr <- list()
     
     lvls <- c("normal", levels(bp[[1]]$type))
