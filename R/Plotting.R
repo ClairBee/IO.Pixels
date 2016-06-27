@@ -212,8 +212,16 @@ panel.edges <- function(left.crop = 2, upper.crop = 20, width = 128, height = 10
 #' 
 #' 
 draw.panels <- function(p = panel.edges(), ...) {
-    abline(h = p$y - 0.5, ...)
-    abline(v = p$x - 0.5, ...)
+
+    # horizontal
+    for (yl in p$y[2:(length(p$y)-1)]-0.5) {
+        lines(range(p$x)-0.5, c(yl, yl), ...)
+    }
+    
+    # vertical
+    for (xl in p$x[2:(length(p$x)-1)]-0.5) {
+        lines(c(xl, xl), range(p$y)-0.5, ...)
+    }
 }
 
 
