@@ -193,7 +193,9 @@ pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c
 #' panels <- panel.edges()
 #' 
 #' 
-panel.edges <- function(left.crop = 2, upper.crop = 20, width = 128, height = 1024, x.dim = 1996, y.dim = 1996) {
+panel.edges <- function(left.crop = 0, upper.crop = 0, width = 128, height = 1024, x.dim = 2048, y.dim = 2048) {
+    
+#    seq(from = 0, to = y.dim, by = height) + y.dim - height + upper.crop + 1
     
     list(y = c(1, y.dim - height + upper.crop + 1, y.dim + 1),
          x = c(1, c(1:15)* width - left.crop + 1, x.dim + 1))
@@ -274,7 +276,7 @@ get.focus <- function(points, surround = 3) {
 #' @examples
 #' pixel.image(b.150828)
 #' scale.hist(b.150828)
-s.hist <- function(data, scale = sd.levels(data), scale.colours = sd.colours(), xlim, ...) {
+s.hist <- function(data, scale = sd.levels(data), scale.colours = sd.colours(), xlim, scale.height = 600, ...) {
     
     data <- data[!is.na(data)]
     
@@ -287,7 +289,7 @@ s.hist <- function(data, scale = sd.levels(data), scale.colours = sd.colours(), 
     
     # add colours to indicate scale of pixel map
     cl <- cut(xlim[1]:xlim[2], scale)
-    points(xlim[1]:xlim[2], rep(-600, length(xlim[1]:xlim[2])), pch = 15, col = scale.colours[cl])
+    points(xlim[1]:xlim[2], rep(-scale.height, length(xlim[1]:xlim[2])), pch = 15, col = scale.colours[cl])
 }
 
 
@@ -314,5 +316,22 @@ focal.plot <- function(im, centre, surround = 5, dp = 1, scale.by = 1000, lbl.ce
     
     if (!missing(bad.px)) {
         points(bad.px[,1:2], pch = 0, cex = bpx.cex)
+    }
+}
+
+
+#' Draw subpanels on 2048 x 2048 array
+#' 
+#' Marks locations of 32 subpanels of 128 x 1024 pixels on plot
+#' @param ... Optional graphical arguments
+#' @export
+#' 
+draw.panels.2048 <- function(...) {
+    
+    # horizontal midline
+    lines (c(0, 2048), c(1024.5, 1024.5), ...)
+    
+    for (i in 1:15) {
+        lines(c(128 * i + 0.5, 128 * i + 0.5), c(0, 2048), ...)
     }
 }

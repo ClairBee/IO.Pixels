@@ -11,7 +11,7 @@ import.acq(acq.folder, subfolders = c("black", "grey", "white"),
 Import all images for one acquisition date into a 2048 x 2048 array, with layers corresponding to different power settings. Cropped pixels are padded with NA.
 }
 \examples{
-im.160430 <- import.acq("/home/clair/Documents/Pixels/Image-data/160430")
+im.160430 <- import.acq("./Image-data/160430")
 
 }
 

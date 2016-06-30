@@ -4,8 +4,8 @@
 \alias{panel.edges}
 \title{Get coordinates of panel edges}
 \usage{
-panel.edges(left.crop = 2, upper.crop = 20, width = 128, height = 1024,
-  x.dim = 1996, y.dim = 1996)
+panel.edges(left.crop = 0, upper.crop = 0, width = 128, height = 1024,
+  x.dim = 2048, y.dim = 2048)
 }
 \arguments{
 \item{left.crop}{Number of pixels cropped from left-hand edge of image. Default is 2.}

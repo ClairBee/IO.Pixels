@@ -5,7 +5,7 @@
 \title{Histogram plot with SD levels shown}
 \usage{
 s.hist(data, scale = sd.levels(data), scale.colours = sd.colours(), xlim,
-  ...)
+  scale.height = 600, ...)
 }
 \arguments{
 \item{data}{Array of numbers to be plotting in histogram}
