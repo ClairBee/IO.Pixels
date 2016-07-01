@@ -114,25 +114,36 @@ filter.lines <- function(im, edges = 10, min.line = 10, horizontal = F, midline 
     # (panel edges are cropped by convolution)
     # could relate this to smoothing parameters - what is distance likely to be?
 
+    if (horizontal) {
+        # snap to panel RHS
+        df$ymax[df$ymax %in% (ncol(im) - c(0:9))] <- ncol(im)
+    } else {
+        # snap to midline
         df$ymin[df$ymin %in% (ceiling(midline) + c(0:9))] <- ceiling(midline)
-        df$ymin[df$ymin %in% (1 + c(0:9))] <- 1
-        
         df$ymax[df$ymax %in% (floor(midline) - c(0:9))] <- floor(midline)
+        
+        # snap to panel top
         df$ymax[df$ymax %in% (nrow(im) - c(0:9))] <- nrow(im)
-
-
+    }
+    # snap to panel LHS/bottom
+    df$ymin[df$ymin %in% (1 + c(0:9))] <- 1
+    
+    # trim line ends to remove 'smoothed' area left over from convolution
+    if (horizontal) {
+        df$ymin <- df$ymin + trim.ends.by
+        df$ymax <- df$ymax-trim.ends.by
+    } else {
+        df$ymin[!(df$ymin %in% c(ceiling(midline),1))] <- df$ymin[!(df$ymin %in% c(ceiling(midline),1))] + trim.ends.by
+        df$ymax[!(df$ymax %in% c(floor(midline), dim(im)[2]))] <- df$ymax[!df$ymax %in% c(floor(midline), dim(im)[2])] - trim.ends.by
+    }
+    
     # recalculate segment lengths based on new endpoints
-        df$length <- df$ymax - df$ymin + 1
+    df$length <- df$ymax - df$ymin + 1
     
     # remove any segments less than 20px in length - UNLESS associated with longer segment
     long <- df[df$length > 20,]
     df <- df[df$col %in% long$col,]
     
-    # trim line ends to remove 'smoothed' area left over from convolution
-    df$ymin[!(df$ymin %in% c(ceiling(midline),1))] <- df$ymin[!(df$ymin %in% c(ceiling(midline),1))] + trim.ends.by
-
-    df$ymax[!(df$ymax %in% c(floor(midline), dim(im)[2]))] <- df$ymax[!df$ymax %in% c(floor(midline), dim(im)[2])] - trim.ends.by
-
     # create new image array containing lines identified
     new.im <- array(0, dim = dim(im))
     
@@ -164,6 +175,12 @@ find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.se
                        edges = 10, min.line = 10, trim.ends = T,
                        horizontal = F, dim.lines = F) {
 
+    # remove padding
+    ar <- apply(which(!is.na(im), arr.ind = T), 2, range)
+    org.dims <- list(im = dim(im), midline = midline)
+    im <- im[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]]
+    midline <- midline - (ar[1,"col"] - 1)
+    
     # perform specified convolution
     conv <- convolve.lines(im, k.size = k.size, horizontal = horizontal, dim.lines = dim.lines)
     
@@ -174,8 +191,12 @@ find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.se
     sm <- smooth.lines(th, sm.size = sm.size, horizontal = horizontal, min.segment = min.segment)
     
     # filter out short line segments and return image of long segments identified
-    lines <- filter.lines(sm, edges = 10, min.line = 10, horizontal = horizontal, 
+    lines <- filter.lines(sm, edges = edges, min.line = min.line, horizontal = horizontal, 
                           midline = midline, trim.ends.by = floor(k.size / 2))
     
-    return(lines)
+    # re-pad image
+    l <- array(dim = org.dims$im)
+    l[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]] <- lines
+    
+    return(l)
 }
