@@ -15,15 +15,18 @@
 #'
 screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 992.5, enlarge = F, auto.threshold = T, ignore.edges = 10) {
     
-    im.dims <- dim(bright.image)
+    # strip out padding to retain only active image region
+    ar <- apply(which(!is.na(bright.image), arr.ind = T), 2, range)
+    bright.im <- bright.image[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]]
+    im.dims <- dim(bright.im)
     
     sk <- shapeKernel(c(min.diam, min.diam), type = "disc")
     
     # apply lowess smoothing
     # don't use default smoothing in this case - don't want smoother to be drawn into dips, so use lower proportion
-    smoo <- lowess.per.column(bright.image, midline = midline, span = smooth.span)
+    smoo <- lowess.per.column(bright.im, midline = midline, span = smooth.span)
     
-    res <- bright.image - smoo
+res <- bright.im - smoo
     
     # flatten further by setting brighter pixels to mean value 
     res[res > mean(res)] <- mean(res)
@@ -45,9 +48,13 @@ screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline 
     # if spot identification should be as large as possible, 
     if (enlarge) {dim.sp <- dilate(dim.sp, sk)}
     
+    # re-pad image
+    sp <- array(dim = dim(bright.image))
+    sp[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]] <- dim.sp
+    
     # remove any spots whose midpoint lies within the edge region
     if (ignore.edges > 0) {
-        blobs <- clump(m2r(dim.sp), dir = 4)
+        blobs <- clump(m2r(sp), dir = 4)
         
         sc <- ddply(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))),
                                id = getValues(blobs)[!is.na(getValues(blobs))]),
