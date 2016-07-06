@@ -195,3 +195,14 @@ summarise.bpx <- function(bp, by = "type") {
 }
 
 
+
+#' Apply shading correction
+#' 
+#' Calculate a shading-corrected image from a set of blanks
+#' @param im Set of pixelwise means for black, grey and white acquisitions
+#' 
+#' @export
+#' 
+shading.corrected <- function(im) {
+    60000 * (im[,,"grey"] - im[,,"black"]) / (im[,,"white"] - im[,,"black"])
+}
