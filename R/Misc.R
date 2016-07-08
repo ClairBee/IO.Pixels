@@ -203,6 +203,11 @@ summarise.bpx <- function(bp, by = "type") {
 #' 
 #' @export
 #' 
-shading.corrected <- function(im) {
-    60000 * (im[,,"grey"] - im[,,"black"]) / (im[,,"white"] - im[,,"black"])
+shading.corrected <- function(im, fix.inf = T) {
+    sc <- 60000 * (im[,,"grey"] - im[,,"black"]) / (im[,,"white"] - im[,,"black"])
+    
+    if (fix.inf) {
+        sc[is.infinite(sc)] <- NA
+    }
+    sc
 }

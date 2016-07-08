@@ -4,7 +4,7 @@
 \alias{shading.corrected}
 \title{Apply shading correction}
 \usage{
-shading.corrected(im)
+shading.corrected(im, fix.inf = T)
 }
 \arguments{
 \item{im}{Set of pixelwise means for black, grey and white acquisitions}

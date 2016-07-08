@@ -13,12 +13,13 @@
 #' @examples
 #' bp <- data.frame(screen.spots(pw.m[,,"white", "160430"]), type = "screen.spot")
 #'
-screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 992.5, enlarge = F, auto.threshold = T, ignore.edges = 10) {
+screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 1024.5, enlarge = F, auto.threshold = T, ignore.edges = 40) {
     
     # strip out padding to retain only active image region
     ar <- apply(which(!is.na(bright.image), arr.ind = T), 2, range)
     bright.im <- bright.image[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]]
     im.dims <- dim(bright.im)
+    midline <- midline - min(which(!is.na(bright.image), arr.ind = T)[,"col"])
     
     sk <- shapeKernel(c(min.diam, min.diam), type = "disc")
     
@@ -26,7 +27,7 @@ screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline 
     # don't use default smoothing in this case - don't want smoother to be drawn into dips, so use lower proportion
     smoo <- lowess.per.column(bright.im, midline = midline, span = smooth.span)
     
-res <- bright.im - smoo
+    res <- bright.im - smoo
     
     # flatten further by setting brighter pixels to mean value 
     res[res > mean(res)] <- mean(res)
