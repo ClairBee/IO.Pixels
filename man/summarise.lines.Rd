@@ -4,7 +4,7 @@
 \alias{summarise.lines}
 \title{Summarise dimensions of line segments identified}
 \usage{
-summarise.lines(im, horizontal = F, midline = 992.5)
+summarise.lines(im, horizontal = F, midline = 1024.5)
 }
 \arguments{
 \item{im}{2d image array after convolution, thresholding and smoothing}

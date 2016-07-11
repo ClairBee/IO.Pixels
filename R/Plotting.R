@@ -260,7 +260,7 @@ get.focus <- function(points, surround = 3) {
     focus <- matrix(c(round(mean(points$x), 0) + rep(c(-surround: surround), n),
                       round(mean(points$y), 0) + sort(rep(c(-surround: surround), n))), ncol = 2)
     focus[focus <= 0] <- 0
-    focus[focus >= 1996] <- 1996
+    focus[focus >= 2048] <- 2048
     return(focus)
 }
 

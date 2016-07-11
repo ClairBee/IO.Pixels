@@ -5,7 +5,7 @@
 \title{Find lines in image}
 \usage{
 find.lines(im, k.size = 5, threshold.at = 5500, sm.size = 11,
-  min.segment = 6, midline = 992.5, edges = 10, min.line = 10,
+  min.segment = 6, midline = 1024.5, edges = 10, min.line = 10,
   trim.ends = T, horizontal = F, dim.lines = F)
 }
 \arguments{

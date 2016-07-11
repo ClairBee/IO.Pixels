@@ -63,7 +63,7 @@ smooth.lines <- function(im, sm.size = 11, horizontal = F, min.segment = 6) {
 #' @return Data frame containing maximum and minimum row identified as part of a line segment, and the range and proportion of each column covered by line segments.
 #' @export
 #' 
-summarise.lines <- function(im, horizontal = F, midline = 992.5) {
+summarise.lines <- function(im, horizontal = F, midline = 1024.5) {
     
     # convert to raster & clump to get line IDs
     lines <- clump(m2r(im), dir = 4)
@@ -94,7 +94,7 @@ summarise.lines <- function(im, horizontal = F, midline = 992.5) {
 #' @return image array with lines marked with separate indices for identification
 #' @export
 #' 
-filter.lines <- function(im, edges = 10, min.line = 10, horizontal = F, midline = 992.5, trim.ends.by = 2) {
+filter.lines <- function(im, edges = 10, min.line = 10, horizontal = F, midline = 1024.5, trim.ends.by = 2) {
     
     df <- summarise.lines(im, horizontal = horizontal, midline = midline)
     
@@ -171,7 +171,7 @@ filter.lines <- function(im, edges = 10, min.line = 10, horizontal = F, midline 
 #' @return Image array with lines marked
 #' @export
 #' 
-find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.segment = 6, midline = 992.5,
+find.lines <- function(im, k.size = 5, threshold.at = 5500, sm.size = 11, min.segment = 6, midline = 1024.5,
                        edges = 10, min.line = 10, trim.ends = T,
                        horizontal = F, dim.lines = F) {
 
