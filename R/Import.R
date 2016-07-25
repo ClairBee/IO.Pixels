@@ -366,7 +366,7 @@ load.pixel.means.2048 <- function(fpath = "./02_Objects/images") {
     ll <- list.files("./02_Objects/images", pattern = "pwm-[a-z, A-Z, 0-9]+\\.rds$", full.names = T)
     
     pw.m <<- abind(lapply(ll, readRDS), along = 4)
-    dimnames(pw.m)[[4]] <<- unlist(lapply(ll, substring, 25, 30))
+    dimnames(pw.m)[[4]] <<- gsub("\\.rds", "", unlist(lapply(ll, substring, 25, 40)))
 }
 
 
