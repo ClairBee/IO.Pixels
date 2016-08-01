@@ -83,6 +83,8 @@ screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline 
 }
 
 
+####################################################################################################
+
 
 # identify individual screen spots from list of coordinates
 #' 
