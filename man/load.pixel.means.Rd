@@ -4,16 +4,14 @@
 \alias{load.pixel.means}
 \title{Create array of all pixelwise means}
 \usage{
-load.pixel.means(fpath = "./Other-data/")
+load.pixel.means(acq.list, fpath = "./02_Objects/images")
 }
 \arguments{
-\item{fpath}{Path to top level of stored images. Default is "./Other-data/"}
+\item{acq.list}{Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".}
+
+\item{fpath}{Path to top level of stored .rds objects. Default is "./02_Objects/images"}
 }
 \description{
-Load all pixelwise mean summaries into a single labelled array.
-}
-\examples{
-load.pixel.means()
-
+Load all pixelwise mean summaries (already created and stored as .rds objects) into a single labelled array.
 }
 

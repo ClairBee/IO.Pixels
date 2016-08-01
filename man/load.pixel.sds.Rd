@@ -4,16 +4,14 @@
 \alias{load.pixel.sds}
 \title{Create array of all pixelwise SDs}
 \usage{
-load.pixel.sds(fpath = "./Other-data/")
+load.pixel.sds(acq.list, fpath = "./02_Objects/stdevs")
 }
 \arguments{
-\item{fpath}{Path to top level of stored images. Default is "./Other-data/"}
+\item{acq.list}{Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".}
+
+\item{fpath}{Path to top level of stored .rds objects. Default is "./02_Objects/images"}
 }
 \description{
 Load all pixelwise standard deviation matrices into a single labelled array.
-}
-\examples{
-load.pixel.sds()
-
 }
 

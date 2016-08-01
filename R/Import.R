@@ -1,4 +1,39 @@
 
+
+#' Create array of all pixelwise means
+#'
+#' Load all pixelwise mean summaries (already created and stored as .rds objects) into a single labelled array.
+#' @param acq.list Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".
+#' @param fpath Path to top level of stored .rds objects. Default is "./02_Objects/images"
+#' @export
+#' 
+load.pixel.means <- function(acq.list, fpath = "./02_Objects/images") {
+    if (missing (acq.list)) {
+        acq.list <- gsub(".rds", "", gsub("pwm-", "", list.files(fpath, pattern = "pwm-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)))
+    }
+    abind(sapply(acq.list, function(nm) readRDS(paste0(fpath, "/pwm-", nm, ".rds")), 
+                 simplify = F),
+          along = 4)
+}
+
+#' Create array of all pixelwise SDs
+#'
+#' Load all pixelwise standard deviation matrices into a single labelled array.
+#' @param acq.list Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".
+#' @param fpath Path to top level of stored .rds objects. Default is "./02_Objects/images"
+#' @export
+#' 
+load.pixel.sds <- function(acq.list, fpath = "./02_Objects/stdevs") {
+    if (missing (acq.list)) {
+        acq.list <- gsub(".rds", "", gsub("pwsd-", "", list.files(fpath, pattern = "pwsd-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)))
+    }
+    abind(sapply(acq.list, function(nm) readRDS(paste0(fpath, "/pwsd-", nm, ".rds")), 
+                 simplify = F),
+          along = 4)
+}
+
+####################################################################################################
+
 #' Load one day's acquisitions from one batch
 #'
 #' Import one day's images from a single batch into an array. If the function is called by the user, the data is loaded into an object named automatically by the function. If called by another function, will return an array.
@@ -305,69 +340,7 @@ load.pixel.maps <- function(fpath = "./Other-data/") {
 }
 
 
-#' Create array of all pixelwise means
-#'
-#' Load all pixelwise mean summaries into a single labelled array.
-#' @param fpath Path to top level of stored images. Default is "./Other-data/"
-#' @export
-#' @examples
-#' load.pixel.means()
-#' 
-load.pixel.means <- function(fpath = "./Other-data/") {
-    
-    # load single image first to get dim names
-    pw.b <- readRDS(paste0(fpath, "Pixelwise-means-black.rds"))
-    
-    pw.m <- array(dim = c(1996, 1996, 3, dim(pw.b)[[3]]),
-                  dimnames = list(NULL, NULL, c("black", "grey", "white"), dimnames(pw.b)[[3]]))
-    
-    # load all pixelwise means into single array
-    pw.m[,,"black",] <- pw.b
-    pw.m[,,"grey",] <- readRDS(paste0(fpath, "Pixelwise-means-grey.rds"))
-    pw.m[,,"white",] <- readRDS(paste0(fpath, "Pixelwise-means-white.rds"))
-    
-    # assign in global environment
-    pw.m <<- pw.m
-}
 
-
-#' Create array of all pixelwise SDs
-#'
-#' Load all pixelwise standard deviation matrices into a single labelled array.
-#' @param fpath Path to top level of stored images. Default is "./Other-data/"
-#' @export
-#' @examples
-#' load.pixel.sds()
-#' 
-load.pixel.sds <- function(fpath = "./Other-data/") {
-    
-    # load single image first to get dim names
-    pw.b <- readRDS(paste0(fpath, "Pixelwise-sds-black.rds"))
-    
-    pw.sd <- array(dim = c(1996, 1996, 3, dim(pw.b)[[3]]),
-                  dimnames = list(NULL, NULL, c("black", "grey", "white"), dimnames(pw.b)[[3]]))
-    
-    # load all pixelwise means into single array
-    pw.sd[,,"black",] <- pw.b
-    pw.sd[,,"grey",] <- readRDS(paste0(fpath, "Pixelwise-sds-grey.rds"))
-    pw.sd[,,"white",] <- readRDS(paste0(fpath, "Pixelwise-sds-white.rds"))
-    
-    # assign in global environment
-    pw.sd <<- pw.sd
-}
-
-
-#' Load pixel means into 2048 x 2048 array
-#' 
-#' Load all pixelwise mean summaries into a single labelled array of size 2048 x 2048 (detector size). Cropped pixels are labelled as NA.
-#' @export
-#' 
-load.pixel.means.2048 <- function(fpath = "./02_Objects/images") {
-    ll <- list.files("./02_Objects/images", pattern = "pwm-[a-z, A-Z, 0-9]+\\.rds$", full.names = T)
-    
-    pw.m <<- abind(lapply(ll, readRDS), along = 4)
-    dimnames(pw.m)[[4]] <<- gsub("\\.rds", "", unlist(lapply(ll, substring, 25, 40)))
-}
 
 
 #' Import a single day's acquisition into a 2048 x 2048 array

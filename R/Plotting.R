@@ -22,8 +22,76 @@ sd.levels <- function(data, midpoint = "mean") {
         m <- mean(data)
     }
     
-    c(min(data), m + (c(-3, -2, -1, -0.5, 0, 0.5, 1, 2, 3) * sd(data)), max(data))
+    sort(c(min(data), m + (c(-6, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 6) * sd(data)), max(data)))
 }
+
+
+#' Colour scheme for contour plot
+#'
+#' Support function: returns a vector of colours to be used in contour plotting.
+#' @return Vector of colours. When used in conjunction with  \link{\code{sd.levels()}}, 
+#' @export
+#' @examples
+#'     filled.contour(x = c(1:dim(data)[1]), y = c(1:dim(data)[2]),
+#'     data,
+#'     levels = sd.levels(mean(data), sd(data)),
+#'     col = sd.colours())
+#' 
+#' 
+sd.colours <- function() {
+    c("black",             # min to -6sd
+      "darkblue",     # -6 to -3sd
+      "blue",             # -3 to -2sd
+      
+      "cyan3",      # -2 to -1sd
+      
+      "green1",       # -1 to -0.5sd
+      "greenyellow",    # 0.5 to 0sd
+      "yellow",             # 0 to 0.5sd
+      "gold",           # 0.5 to 1sd
+      
+      "orange",              # 1 to 2sd
+      
+      "red3",        # 2 to 3sd
+      "purple",           # 3 to 6sd
+      "deeppink")         # 6sd to max    
+}
+
+
+
+#' Display pixel values as image
+#'
+#' Create an image with pixels shaded according to their distance from the mean value. Displays at lower resolution than contour plot (plots are 20% of the size), but much quicker (10% of time taken).
+#' @details Pixels more than 2sd above the mean are red, pink or purple. Pixels within 2sd of the mean are orange, yellow or green. Pixels more than 2sd below the mean are blue.
+#' @param data 2-dimensional matrix containing values to be plotted
+#' @param x.range Vector range showing x-range of cells to be included in plot
+#' @param y.range Vector range showing y-range of cells to be included in plot
+#' @param title String containing title to be printed with plot
+#' @param midpoint Either 'mean' or 'median'. Default is 'mean'
+#' @param break.levels Vector of values used as breakpoints when binning values
+#' @export
+#' @examples
+#' pixel.image(pw.mean)
+#' 
+#' 
+pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), 
+                        midpoint = "mean", break.levels = sd.levels(data, "mean"), 
+                        panels = F, x.lab = "", y.lab = "", ...) {
+    
+    image(x.range, y.range, 
+          data[x.range, y.range], 
+          col = sd.colours(),
+          breaks = break.levels,
+          main = title, xlab = x.lab, ylab = y.lab,
+          asp = T, 
+          ...)
+    
+    if (panels) draw.panels()
+}
+
+
+
+####################################################################################################
 
 
 #' Set contour plot levels
@@ -60,32 +128,7 @@ iqr.levels <- function(data) {
 }
 
 
-#' Colour scheme for contour plot
-#'
-#' Support function: returns a vector of colours to be used in contour plotting.
-#' @return Vector of colours. When used in conjunction with  \link{\code{sd.levels()}}, 
-#' @export
-#' @examples
-#'     filled.contour(x = c(1:dim(data)[1]), y = c(1:dim(data)[2]),
-#'     data,
-#'     levels = sd.levels(mean(data), sd(data)),
-#'     col = sd.colours())
-#' 
-#' 
-sd.colours <- function() {
-    c("midnightblue",     # 0 to -3sd
-      "blue",             # -3 to -2sd
-      "dodgerblue3",      # -2 to -1sd
-      
-      "greenyellow",       # -1 to -0.5sd
-      "yellow",           # 0.5 to 0sd
-      "gold",             # 0 to 0.5sd
-      "orange",           # 0.5 to 1sd
-      
-      "red3",              # 1 to 2sd
-      "violetred",        # 2 to 3sd
-      "purple")           # 3sd to 1
-}
+
 
 
 #' Colour scheme for bad pixel plot
@@ -146,35 +189,7 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 }
 
 
-#' Display pixel values as image
-#'
-#' Create an image with pixels shaded according to their distance from the mean value. Displays at lower resolution than contour plot (plots are 20% of the size), but much quicker (10% of time taken).
-#' @details Pixels more than 2sd above the mean are red, pink or purple. Pixels within 2sd of the mean are orange, yellow or green. Pixels more than 2sd below the mean are blue.
-#' @param data 2-dimensional matrix containing values to be plotted
-#' @param x.range Vector range showing x-range of cells to be included in plot
-#' @param y.range Vector range showing y-range of cells to be included in plot
-#' @param title String containing title to be printed with plot
-#' @param midpoint Either 'mean' or 'median'. Default is 'mean'
-#' @param break.levels Vector of values used as breakpoints when binning values
-#' @export
-#' @examples
-#' pixel.image(pw.mean)
-#' 
-#' 
-pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), 
-                        midpoint = "mean", break.levels = sd.levels(data, "mean"), 
-                        panels = F, x.lab = "", y.lab = "", ...) {
 
-    image(x.range, y.range, 
-          data[x.range, y.range], 
-          col = sd.colours(),
-          breaks = break.levels,
-          main = title, xlab = x.lab, ylab = y.lab,
-          asp = T, 
-          ...)
-    
-    if (panels) draw.panels()
-}
 
 
 #' Plot defective pixels
@@ -352,4 +367,13 @@ draw.panels.2048 <- function(...) {
     for (i in 1:15) {
         lines(c(128 * i + 0.5, 128 * i + 0.5), c(0, 2048), ...)
     }
+}
+
+
+#' Colour ramp for pixel images
+#' 
+#' @export
+sd.ramp <- function() {
+    colorRampPalette(c("darkblue", "cyan3", "green2", "lemonchiffon", "gold", "red3", "purple"), 
+                     space = "Lab")
 }
