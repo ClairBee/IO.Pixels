@@ -4,21 +4,17 @@
 \alias{screen.spots}
 \title{Identify pixels covered by spots on screen}
 \usage{
-screen.spots(bright.image, smooth.span = 1/5, min.diam = 5,
-  midline = 1024.5, enlarge = F, auto.threshold = T, ignore.edges = 40)
+screen.spots(im, min.diam = 5, smooth.span = 1/15, midline = 1024.5,
+  edge.crop = 10, coords = T)
 }
 \arguments{
-\item{bright.image}{Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.}
-
-\item{smooth.span}{Smoothing span to be used for Lowess. Default is 1/5 (this is a lower proportion than the standard default, since the aim is to 'skim over' any deviations from a smooth curve, not to fit them)}
+\item{im}{Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.}
 
 \item{min.diam}{Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.}
 
-\item{midline}{Integer: y-coordinate of horizontal panel midline, dividing electrically separates panels. Per-column Lowess smoothing stops at the midline.}
+\item{smooth.span}{Smoothing span to be used for Lowess. Default is 1/15 (this is a lower proportion than the standard default, since the aim is to 'skim over' any deviations from a smooth curve, not to fit them)}
 
-\item{enlarge}{Boolean: should identified spots be dilated (enlarged) by the structuring element to smooth the edges and cover the largest area possible? default is T.}
-
-\item{auto.threshold}{Boolean: should screen spots be thresholded using k-means clustering (T) or by thresholding at the mean value - 3sd (F)? Default is T (auto-thresholding).}
+\item{midline}{Numeric: y-coordinate of horizontal panel midline, dividing electrically separates panels. Default is 1024.5.}
 }
 \value{
 Matrix of XY coordinates of pixels identified as probable screen spots

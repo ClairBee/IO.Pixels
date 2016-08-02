@@ -15,6 +15,7 @@
 sd.levels <- function(data, midpoint = "mean") {
     
     data <- data[!is.na(data)]
+    data <- data[!is.infinite(data)]
     
     if (midpoint == "median") {
         m <- median(data)
@@ -89,6 +90,29 @@ pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c
     if (panels) draw.panels()
 }
 
+
+#' Draw outlines of convex hulls
+#' 
+#' Given a set of coordinates, identify each cluster of adjacent pixels and draw the convex hull.
+#' @param px Matrix or data frame of x and y coordinates to be clumped and outlined
+#' 
+#' @export
+#' 
+draw.outlines <- function(px, im.dim = c(2048, 2048), ...) {
+    
+    # clump adjacent pixels
+    cc <- clump(m2r(bpx2im(data.frame(px, type = 1), im.dim = im.dim)), dir = 4)
+    
+    # coordinates of each clump, with clump id
+    xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
+                     id = getValues(cc)[!is.na(getValues(cc))])
+    
+    invisible(lapply(unique(xy$id),
+           function(i) {
+               ch <- chull(xy[xy$id == i,1:2])
+               lines(xy[xy$id == i,1:2][c(ch, ch[1]),], ...)
+           }))
+}
 
 
 ####################################################################################################

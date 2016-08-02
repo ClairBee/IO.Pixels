@@ -2,124 +2,52 @@
 #' Identify pixels covered by spots on screen
 #' 
 #' Find dim spots of a given size or larger in a single bright image, and return their x and y coordinates
-#' @param bright.image Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.
-#' @param smooth.span Smoothing span to be used for Lowess. Default is 1/5 (this is a lower proportion than the standard default, since the aim is to 'skim over' any deviations from a smooth curve, not to fit them)
+#' @param im Image array containing an image with x-ray exposure, in which non-responsive pixels are to be found.
+#' @param smooth.span Smoothing span to be used for Lowess. Default is 1/15 (this is a lower proportion than the standard default, since the aim is to 'skim over' any deviations from a smooth curve, not to fit them)
 #' @param min.diam Integer: minimum diameter of a dim spot, in pixels (used to set size of circular structuring element for morphological closing). Default is 5.
-#' @param midline Integer: y-coordinate of horizontal panel midline, dividing electrically separates panels. Per-column Lowess smoothing stops at the midline.
-#' @param enlarge Boolean: should identified spots be dilated (enlarged) by the structuring element to smooth the edges and cover the largest area possible? default is T.
-#' @param auto.threshold Boolean: should screen spots be thresholded using k-means clustering (T) or by thresholding at the mean value - 3sd (F)? Default is T (auto-thresholding).
+#' @param midline Numeric: y-coordinate of horizontal panel midline, dividing electrically separates panels. Default is 1024.5.
 #' @return Matrix of XY coordinates of pixels identified as probable screen spots
 #' @export
 #' @examples
 #' bp <- data.frame(screen.spots(pw.m[,,"white", "160430"]), type = "screen.spot")
 #'
-screen.spots <- function(bright.image, smooth.span = 1/5, min.diam = 5, midline = 1024.5, enlarge = F, auto.threshold = T, ignore.edges = 40) {
+screen.spots <- function(im, min.diam = 5, smooth.span = 1/15, midline = 1024.5, edge.crop = 10, coords = T) {
     
-    # strip out padding to retain only active image region
-    ar <- apply(which(!is.na(bright.image), arr.ind = T), 2, range)
-    bright.im <- bright.image[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]]
-    im.dims <- dim(bright.im)
-    midline <- midline - min(which(!is.na(bright.image), arr.ind = T)[,"col"])
+    # offset correction for upper vs lower panels (if midline exists)
+    if (!is.na (midline)) {
+        up <- apply(im[, floor(midline) + c(1:100)], 1, median, na.rm = T)
+        lp <- apply(im[, floor(midline) + c(0:-100)], 1, median, na.rm = T)
+        
+        im[, ceiling(midline):dim(im)[[2]]] <- im[, ceiling(midline):dim(im)[[2]]] - (up - lp)
+    }
     
+    # Lowess smoothing over all columns
+    # (faster than Loess & easier to apply in this format)
+    res <- im - do.call("rbind", lapply(apply(im, 1, lowess, f = smooth.span), "[[", 2))
+    med.res <- median(res, na.rm = T)
+    
+    # truncate residual values at median
+    tr <- res
+    tr[res > med.res] <- med.res
+    
+    # morphological closing
     sk <- shapeKernel(c(min.diam, min.diam), type = "disc")
+    cl <- closing(tr, sk)
     
-    # apply lowess smoothing
-    # don't use default smoothing in this case - don't want smoother to be drawn into dips, so use lower proportion
-    smoo <- lowess.per.column(bright.im, midline = midline, span = smooth.span)
+    # pad with median residual value
+    cl[is.infinite(cl) | is.na(cl)] <- med.res
     
-    res <- bright.im - smoo
+    # threshold at 1 SD below median
+    th <- threshold(cl, method = "literal", level = - sd(res, na.rm = T))
     
-    # flatten further by setting brighter pixels to mean value 
-    res[res > mean(res)] <- mean(res)
+    # remove any pixels that lie at edge of active area
+    th[, apply(which(!is.na(res), arr.ind = T), 2, range)[,2]] <- 1 # residual artefact at edge of smoothed area
+    th[c(1 + c(0:edge.crop), dim(th)[1] - c(0:edge.crop)), ] <- 1    # panel edges
+    th[, c(1 + c(0:edge.crop), dim(th)[1] - c(0:edge.crop))] <- 1    # panel edges
     
-    # dilate resulting image
-    dilated <- dilate(res, sk)
+    # enlarge by eroding with same structuring element
+    exp <- erode(th, sk)
     
-    # erode resulting image (complete morphological closing)
-    eroded <- erode(dilated, sk)
-    
-    # use k-means thresholding to identify spots
-    # use 1-thresholded value to assign 1 to spots, 0 to background
-    if (auto.threshold) {
-        dim.sp <- array(1, dim = im.dims) - threshold(eroded, method = "kmeans")
-    } else {
-        dim.sp <- array(1, dim = im.dims) - threshold(eroded, mean(eroded) - 3*sd(eroded))
-    }
-    
-    # if spot identification should be as large as possible, 
-    if (enlarge) {dim.sp <- dilate(dim.sp, sk)}
-    
-    # re-pad image
-    sp <- array(dim = dim(bright.image))
-    sp[ar[1,"row"]:ar[2,"row"], ar[1,"col"]:ar[2,"col"]] <- dim.sp
-    
-    # remove any spots whose midpoint lies within the edge region
-    if (ignore.edges > 0) {
-        blobs <- clump(m2r(sp), dir = 4)
-        
-        sc <- ddply(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))),
-                               id = getValues(blobs)[!is.na(getValues(blobs))]),
-                    .(id), summarise, 
-                    x.midpoint = round(mean(x),0), y.midpoint = round(mean(y),0),
-                    size = length(x))
-        
-        sc$n.id <- sc$id
-        sc$n.id[(sc$y.midpoint >= im.dims[2] - ignore.edges) | (sc$y.midpoint <= ignore.edges) | 
-                    (sc$x.midpoint >= im.dims[1] - ignore.edges) | (sc$x.midpoint <= ignore.edges)] <- NA
-        
-        if (nrow(sc[!is.na(sc$n.id),]) > 0) {
-            blobs <- subs(blobs, sc[,c("id", "n.id")])
-            dim.sp <- bpx2im(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))), type = 1))
-        } else {
-            dim.sp <- array(0, dim = im.dims)
-        }
-    }
-    
-    if (sum(dim.sp == 1) == 0) {
-        return(NULL)
-    } else {
-        return(which(dim.sp == 1, arr.ind = T))
-    }
+    if (coords) {return(which(exp == 0, arr.ind = T))} else {return(exp)}
 }
 
-
-####################################################################################################
-
-
-# identify individual screen spots from list of coordinates
-#' 
-#' Convert a list of screen spot coordinates into an image array and summary table
-#' @param ss.coords Matrix of XY coordinates of identified screen spots, as returned by \code{\link{screen.spots}}
-#' @param im.dims Dimensions of image on which to display coordinates
-#' @param ignore.edges Integer: width of border around panel within which pixels are assumed to be dim because of their proximity to the edge, rather than because of a spot on the screen. Spots whose midpoint falls within this border will be removed. Default is 10.
-#' @return List containing an image array of the specified dimensions, and a data frame summarising each spot's midpoint and size.
-#' @export
-#' @examples
-#' image(screen.spot.clusters(screen.spots(pw.m[,,"white", "160430"]))$spots)
-#' 
-screen.spot.clusters <- function(ss.coords, im.dims = c(1996, 1996), ignore.edges = 10) {
-    
-    ss.im <- bpx2im(data.frame(ss.coords, type = 1), im.dim = im.dims)
-    
-    #------------------------------------------------------------------------------
-    # convert to raster & clump values to identify individual spots
-    # (values need to be reordered to maintain image orientation)
-    blobs <- clump(m2r(ss.im), dir = 4)
-    
-    # summarise & remove any clusters that are too close to an edge
-    # check location of cluster (looking for edge clusters)
-    sc <- ddply(data.frame(xyFromCell(blobs, which(!is.na(getValues(blobs)))),
-                           id = getValues(blobs)[!is.na(getValues(blobs))]),
-                .(id), summarise, 
-                x.midpoint = round(mean(x),0), y.midpoint = round(mean(y),0),
-                size = length(x))
-    
-    sc$n.id <- sc$id
-    sc$n.id[(sc$y.midpoint >= im.dims[2] - ignore.edges) | (sc$y.midpoint <= ignore.edges) | 
-                (sc$x.midpoint >= im.dims[1] - ignore.edges) | (sc$x.midpoint <= ignore.edges)] <- NA
-    
-    blobs <- subs(blobs, sc[,c("id", "n.id")])
-    
-    # return array with numbered blobs
-    return(list(spots = blobs, summary = sc[!is.na(sc$n.id),1:4]))
-}
