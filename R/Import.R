@@ -3,11 +3,16 @@
 #' Create array of all pixelwise means
 #'
 #' Load all pixelwise mean summaries (already created and stored as .rds objects) into a single labelled array.
-#' @param acq.list Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".
+#' @details RDS objects for import can be downloaded from https://github.com/ClairBee/Pixels/tree/master/02_Objects/images
 #' @param fpath Path to top level of stored .rds objects. Default is "./02_Objects/images"
+#' @param acq.list Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".
 #' @export
 #' 
-load.pixel.means <- function(acq.list, fpath = "./02_Objects/images") {
+load.pixel.means <- function(fpath = "./02_Objects/images", acq.list) {
+    
+    # remove trailing blackslash, if necessary
+    fpath <- gsub("/$", "", fpath)
+    
     if (missing (acq.list)) {
         acq.list <- gsub(".rds", "", gsub("pwm-", "", list.files(fpath, pattern = "pwm-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)))
     }
@@ -28,6 +33,30 @@ load.pixel.sds <- function(acq.list, fpath = "./02_Objects/stdevs") {
         acq.list <- gsub(".rds", "", gsub("pwsd-", "", list.files(fpath, pattern = "pwsd-[a-z, A-Z, 0-9]+\\.rds$", full.names = F)))
     }
     abind(sapply(acq.list, function(nm) readRDS(paste0(fpath, "/pwsd-", nm, ".rds")), 
+                 simplify = F),
+          along = 4)
+}
+
+
+#' Create array from stored .rds objects
+#'
+#' Load all .rds ojects of a specified type into a single labelled array.
+#' @details RDS objects for import can be downloaded from https://github.com/ClairBee/Pixels/tree/master/02_Objects
+#' @param fpath Path to top level of stored .rds objects. Default is "./02_Objects/images"
+#' @param otype String specifying which type of image should be imported. Default is "pwm" (pixelwise mean images).
+#' @param acq.list Vector containing acquisitions to import. If left blank, will import every file in the target folder named "<otype>-xxxxxx.rds".
+#' @export
+#' 
+load.objects <- function(fpath = "./02_Objects/images", otype = "pwm", acq.list) {
+    
+    # remove trailing blackslash, if necessary
+    fpath <- gsub("/$", "", fpath)
+    otype <- paste0(gsub("-$", "", otype), "-")
+    
+    if (missing (acq.list)) {
+        acq.list <- gsub(".rds", "", gsub(otype, "", list.files(fpath, pattern = paste0(otype, "[a-z, A-Z, 0-9]+\\.rds$"), full.names = F)))
+    }
+    abind(sapply(acq.list, function(nm) readRDS(paste0(fpath, "/", otype, nm, ".rds")), 
                  simplify = F),
           along = 4)
 }

@@ -4,14 +4,17 @@
 \alias{load.pixel.means}
 \title{Create array of all pixelwise means}
 \usage{
-load.pixel.means(acq.list, fpath = "./02_Objects/images")
+load.pixel.means(fpath = "./02_Objects/images", acq.list)
 }
 \arguments{
-\item{acq.list}{Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".}
-
 \item{fpath}{Path to top level of stored .rds objects. Default is "./02_Objects/images"}
+
+\item{acq.list}{Vector containing acquisitions to import. If left blank, will import every file in the target folder named "pwm-xxxxxx.rds".}
 }
 \description{
 Load all pixelwise mean summaries (already created and stored as .rds objects) into a single labelled array.
+}
+\details{
+RDS objects for import can be downloaded from https://github.com/ClairBee/Pixels/tree/master/02_Objects/images
 }
 
