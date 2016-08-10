@@ -5,7 +5,7 @@
 \title{Plot defective pixels}
 \usage{
 pixel.plot(px, xlim = c(0, 2048), ylim = c(0, 2048), pch = 15,
-  panels = F, main = "", xlab = "", ylab = "", ...)
+  panels = F, cex = 0.4, main = "", xlab = "", ylab = "", ...)
 }
 \arguments{
 \item{px}{Coordinates of pixels to be plotted}

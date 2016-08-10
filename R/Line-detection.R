@@ -1,4 +1,154 @@
 
+#' Find dark lines in an image
+#' 
+#' Identify pixels below a certain threshold and clump with adjacent dark pixels to find long columns of dark pixels. (To find rows, the bright image should be transposed)
+#' @param bright.image Bright image array in which dark pixels are to be identified
+#' @param dark.limit Integer grey-value below which a pixel will be classified as dark. Default is 25000
+#' @param min.length Integer minimum length of a line segment to be considered a line (rather than a cluster). Default is 5
+#' @param midline Y-coordinate of horizontal midline across panel, where upper and lower subpanels are electrically separated. Default is 1024.5; if no midline exists, use midline = NA
+#' @return Data frame of x and y coordinates of identified dark lines, with line type and feature type
+#' @export
+#' @examples
+#' dc <- dark.lines(pw.m[,,"white", "130613"])         # look for dark columns
+#' dr <- dark.lines(t(pw.m[,,"white", "130613"]))      # look for dark rows
+#' 
+dark.lines <- function(bright.image, dark.limit = 25000, min.length = 5, midline = 1024.5) {
+    
+    # threshold image to identify dark pixels
+    dpx <- bright.image < dark.limit
+    
+    # clump dark pixels, get coordinates
+    lines <- clump(m2r(dpx), dir = 4)
+    xy <- data.frame(xyFromCell(lines, which(!is.na(getValues(lines)))), 
+                     id = getValues(lines)[!is.na(getValues(lines))])
+    
+    # summarise by column & clump ID. Filter out short segments
+    dl <- ddply(xy, .(id, col = x), summarise, ymin = min(y), ymax = max(y), length = ymax - ymin + 1)
+    dl <- dl[dl$length > min.length,]
+    
+    if (nrow(dl) == 0) return (NULL)
+    
+    # return coordinates of selected lines
+    x <- c(unlist(unname(apply(dl, 1, function(ll) rep(unname(ll["col"]), ll["length"])))))
+    y <- c(unlist(unname(apply(dl, 1, function(ll) seq(ll["ymin"] * 1, ll["ymax"] * 1)))))
+    
+    df <- data.frame(x, y, type = "dark", f.type = "line.body", stringsAsFactors = F)
+    
+    # if no midline, use top of panel as line end
+    if (is.na(midline)) midline <- nrow(bright.image)
+    
+    # set line ends as line.root feature type (if line ends are visible)
+    for (r in 1:nrow(dl)) {
+        l.end <- as.numeric(dl[r, c("ymin", "ymax")][which.max(abs(dl[r, c("ymin", "ymax")] - 1024.5))])
+        if (!l.end %in% range(which(!is.na(bright.image[as.integer(dl[r, "col"]),])))) {
+            df[df$x == as.numeric(dl[r, "col"]) & df$y == l.end, "f.type"] <- "line.root"
+        }
+    }
+    
+    return(df)
+}
+
+
+
+#' Find dim or bright lines in an image
+#' 
+#' Use convolution and filtering to identify vertical segments of bright or dim pixels.
+#' @param k.size Size of (square) kernel to use. Default is 5.
+#' @param threshold.at Numeric value at which to threshold convolved data. Default is 5500, which will highlight rows that are approximately 300 grey values higher than both of their neighbours in the direction of interest.
+#' @param min.length Integer: minimum number of pixels to accept as a line segment after smoothing. Default is 10.
+#' @param midline Y-coordinate of horizontal midline across panel, where upper and lower subpanels are electrically separated. Default is 1024.5; if no midline exists, use midline = NA
+#' @return Data frame containing x and y coordinates of identified lines, and classification of each segment as either a line root, line body, or channel offset.
+#' @export
+#' @examples
+#' 
+offset.lines <- function(md, k.size = 5, threshold.at = 5500, min.length = 10, midline = 1024.5) {
+    
+    # convolution kernel to search for vertical lines
+    k <- matrix(c(rep(-1, k.size * floor(k.size / 2)),
+                  rep(k.size - 1, k.size), 
+                  rep(-1,k.size * floor(k.size / 2))),
+                ncol = k.size)
+    
+    # perform convolution
+    conv <- r2m(focal(m2r(md), k))
+    
+    # threshold (retaining distinction between bright & dim lines)
+    th <- conv > threshold.at
+    th[which(conv < - threshold.at, arr.ind = T)] <- 2
+    
+    # find line segments by clumping adjacent pixels
+    lines <- clump(m2r(th), dir = 4)
+    xy <- data.frame(xyFromCell(lines, which(!is.na(getValues(lines)))), 
+                     id = getValues(lines)[!is.na(getValues(lines))])
+    xy$type <- th[as.matrix(xy[,1:2])]
+    
+    # summarise line segments per column and type
+    dl <- ddply(xy, .(x, type), summarise, ymin = min(y), 
+                ymax = max(y), length = length(x))
+    dl <- dl[dl$length > min.length, ]
+    
+    # return NULL if no segments found
+    if (nrow(dl) == 0) return(NULL)
+    
+    #-------------------------------------------------
+    
+    # otherwise identify most likely breakpoint & get mean value for each segment
+    
+    cp <- rbind.fill(apply(dl, 1, 
+                           function(ll) {
+                               # extract relevant line segment
+                               if (!is.na(midline)) {
+                                   p.adj <- as.integer(floor(midline) * (ll["ymax"] > midline))
+                                   vv <- md[as.integer(ll["x"]), c(1:floor(midline)) + p.adj]
+                               } else {
+                                   p.adj <- 0
+                                   vv <- md[ll["x"],]
+                               }
+                               
+                               # store offset for NA values padding edge of array
+                               vv.adj <- (min(which(is.na(vv))) == 1) * max(which(is.na(vv)))
+                               l <- length(vv[!is.na(vv)])
+                               
+                               # identify changepoints (at most one changepoint)
+                               cm <- cpt.mean(vv[!is.na(vv)], class = F)[1]
+                               
+                               if (cm == 1) {
+                                   # no changepoints found - whole-column defect
+                                   data.frame(x = unlist(rep(ll["x"], l)),
+                                              y = c(1:l) + p.adj + vv.adj,
+                                              type = c("dim", "bright")[(mean(vv, na.rm = T) > 0) + 1],
+                                              f.type = "channel",
+                                              stringsAsFactors = F)
+                               } else {
+                                   # changepoint found - include both segments
+                                   px <- rbind(data.frame(x = unlist(rep(ll["x"], cm)),
+                                                          y = c(1:cm) + p.adj + vv.adj,
+                                                          type = c("dim", "bright")[(mean(vv[1:(cm + vv.adj)], na.rm = T) > 0) + 1],
+                                                          f.type = "line.body",
+                                                          stringsAsFactors = F),
+                                               data.frame(x = unlist(rep(ll["x"], l-cm)),
+                                                          y = c((cm + 1):l) + p.adj + vv.adj,
+                                                          type = c("dim", "bright")[(mean(vv[(cm + vv.adj):length(vv)], na.rm = T) > 0) + 1],
+                                                          f.type = "line.body",
+                                                          stringsAsFactors = F))
+                                   px[px$y == cm + p.adj + vv.adj, "f.type"] <- "line.root"
+                                   px
+                               }
+                           }))
+    
+    return(cp)
+}
+
+
+
+
+
+####################################################################################################
+
+
+
+
+
 #' Identify bad rows or columns
 #' 
 #' Perform a 2d convolution over an image to enhance lines of bright or dim pixels.

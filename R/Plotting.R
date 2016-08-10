@@ -115,6 +115,26 @@ draw.outlines <- function(px, im.dim = c(2048, 2048), ...) {
 }
 
 
+
+#' Plot defective pixels
+#'
+#' Plot bad pixel map on 2048 x 2048 grid
+#' @param px Coordinates of pixels to be plotted
+#' @export
+#' @examples
+#' pixel.plot(which(pw.mean > 25000, arr.ind = T))
+#' 
+#' 
+pixel.plot <- function(px, xlim = c(0,2048), ylim = c(0,2048), pch = 15, panels = F, cex = 0.4,
+                       main = "", xlab = "", ylab = "", ...) {
+    
+    plot(px[,1:2], asp = T, 
+         xlim = xlim, ylim = ylim, pch = pch, main = main, xlab = xlab, ylab = ylab, cex = cex, ...)
+    
+    if (panels) draw.panels()
+}
+
+
 ####################################################################################################
 
 
@@ -216,23 +236,7 @@ pixel.contour <- function(data, title = "", midpoint = "mean") {
 
 
 
-#' Plot defective pixels
-#'
-#' Plot bad pixel map on 2048 x 2048 grid
-#' @param px Coordinates of pixels to be plotted
-#' @export
-#' @examples
-#' pixel.plot(which(pw.mean > 25000, arr.ind = T))
-#' 
-#' 
-pixel.plot <- function(px, xlim = c(0,2048), ylim = c(0,2048), pch = 15, panels = F, 
-                       main = "", xlab = "", ylab = "", ...) {
-    
-    plot(px[,1:2], asp = T, 
-         xlim = xlim, ylim = ylim, pch = pch, main = main, xlab = xlab, ylab = ylab, ...)
-    
-    if (panels) draw.panels()
-}
+
 
 
 #' Get coordinates of panel edges

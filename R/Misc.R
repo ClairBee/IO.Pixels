@@ -1,4 +1,54 @@
 
+#' Convert matrix to raster
+#' 
+#' Convert an image array to a raster file, maintaining the correct orientation for plotting
+#' @param im Single-layer image array to be converted to a raster
+#' @return RasterLayer object containing the image values
+#' @export
+#' 
+m2r <- function(im) {
+    # rotate matrix by reversing and transposing, then convert to raster
+    mat <- t(im)[dim(im)[2]:1,]
+    raster(mat, xmn = 0.5, xmx = dim(im)[1] + .5, ymn = 0.5, ymx = dim(im)[2] + .5)
+}
+
+
+#' Convert raster to matrix
+#' 
+#' Convert a raster to an image array, maintaining the correct orientation for plotting
+#' @param rast Single-layer RasterLayer object to be converted to a 2d array
+#' @return Single-layer image array
+#' @export
+#' 
+r2m <- function(rast) {
+    mat <- matrix(getValues(rast), ncol = dim(rast)[2], byrow = T)
+    t(mat[dim(mat)[1]:1,,drop = F])
+}
+
+
+#' Apply shading correction
+#' 
+#' Calculate a shading-corrected image from a set of blanks
+#' @param im Set of pixelwise means for black, grey and white acquisitions
+#' 
+#' @export
+#' 
+shading.corrected <- function(im, fix.inf = T) {
+    sc <- 60000 * (im[,,"grey"] - im[,,"black"]) / (im[,,"white"] - im[,,"black"])
+    
+    if (fix.inf) {
+        sc[is.infinite(sc)] <- NA
+    }
+    sc
+}
+
+
+
+
+####################################################################################################
+
+
+
 #' Create sample of 'healthy' pixels
 #'
 #' Given a matrix of coordinates of bad pixels, create a same-size random sample of healthy pixels that do not appear on the bad pixel list.
@@ -143,31 +193,7 @@ Johnson.QQ <- function(data, quantiles = c(1:999)/1000, grid.quantiles = c(0.01,
 
 
 
-#' Convert matrix to raster
-#' 
-#' Convert an image array to a raster file, maintaining the correct orientation for plotting
-#' @param im Single-layer image array to be converted to a raster
-#' @return RasterLayer object containing the image values
-#' @export
-#' 
-m2r <- function(im) {
-    # rotate matrix by reversing and transposing, then convert to raster
-    mat <- t(im)[dim(im)[2]:1,]
-    raster(mat, xmn = 0.5, xmx = dim(im)[1] + .5, ymn = 0.5, ymx = dim(im)[2] + .5)
-}
 
-
-#' Convert raster to matrix
-#' 
-#' Convert a raster to an image array, maintaining the correct orientation for plotting
-#' @param rast Single-layer RasterLayer object to be converted to a 2d array
-#' @return Single-layer image array
-#' @export
-#' 
-r2m <- function(rast) {
-    mat <- matrix(getValues(rast), ncol = dim(rast)[2], byrow = T)
-    t(mat[dim(mat)[1]:1,,drop = F])
-}
 
 
 
@@ -196,18 +222,3 @@ summarise.bpx <- function(bp, by = "type") {
 
 
 
-#' Apply shading correction
-#' 
-#' Calculate a shading-corrected image from a set of blanks
-#' @param im Set of pixelwise means for black, grey and white acquisitions
-#' 
-#' @export
-#' 
-shading.corrected <- function(im, fix.inf = T) {
-    sc <- 60000 * (im[,,"grey"] - im[,,"black"]) / (im[,,"white"] - im[,,"black"])
-    
-    if (fix.inf) {
-        sc[is.infinite(sc)] <- NA
-    }
-    sc
-}
