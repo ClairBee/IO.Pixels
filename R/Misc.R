@@ -179,6 +179,7 @@ plot.map.comparison <- function(map, img.date, colour = "all") {
 #' Johnson.QQ(pw.sd[,,"black", "150828"])
 Johnson.QQ <- function(data, quantiles = c(1:999)/1000, grid.quantiles = c(0.01, 0.99), title = "Johnson Q-Q plot", ...) {
     
+    data <- data[!is.na(data)]
     jf <- JohnsonFit(data, moment = "quant")
     
     plot(qJohnson(quantiles, jf), quantile(data, quantiles), pch = 20, asp = T,

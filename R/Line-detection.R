@@ -82,17 +82,27 @@ offset.lines <- function(md, k.size = 5, threshold.at = 5500, min.length = 10, m
                      id = getValues(lines)[!is.na(getValues(lines))])
     xy$type <- th[as.matrix(xy[,1:2])]
     
-    # summarise line segments per column and type
-    dl <- ddply(xy, .(x, type), summarise, ymin = min(y), 
-                ymax = max(y), length = length(x))
-    dl <- dl[dl$length > min.length, ]
+    # summarise line segments per clump, column and type
+    dl <- ddply(xy, .(id, x, type), summarise, ymin = min(y), 
+                ymax = max(y), length = length(x), density = length / (ymax - ymin + 1))
     
+    # filter out short line segments, or those which are less than half-covered
+    dl <- dl[dl$length > min.length & dl$density > 0.5, ]
+
     # return NULL if no segments found
     if (nrow(dl) == 0) return(NULL)
     
     #-------------------------------------------------
     
-    # otherwise identify most likely breakpoint & get mean value for each segment
+    # otherwise merge any line segments that fall in same channel
+    if (is.na(midline)) {
+        dl <- ddply(dl, .(x), summarise, y.min = min(ymin), y.max = max(ymax))
+    } else {
+        dl <- rbind(ddply(dl[dl$ymin > 1024.5,], .(x), summarise, ymin = min(ymin), ymax = max(ymax)),
+                    ddply(dl[dl$ymin < 1024.5,], .(x), summarise, ymin = min(ymin), ymax = max(ymax)))
+    }
+    
+    #identify most likely breakpoint & get mean value for each segment
     
     cp <- rbind.fill(apply(dl, 1, 
                            function(ll) {
