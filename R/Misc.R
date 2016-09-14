@@ -44,10 +44,40 @@ shading.corrected <- function(im, fix.inf = T) {
 
 
 
+#' Asymmetric NMAD thresholds
+#' 
+#' Calculate modal density mu of data and find boundaries at distance n * MAD either side of mu.
+#' @param dat Data for which bounds are to be calculated
+#' @param n Number of multiples of MAD to be applied either side of mu
+#' @return Vector containing upper and lower bounds
+#' @export
+#' 
+asymmetric.mad <- function(dat, n = 6) {
+    
+    zz <- density(dat, n = 65536, na.rm = T)
+    
+    # break at point of maximum density
+    mu <- zz$x[which.max(zz$y)]
+    
+    # calculate MAD on either side of breakpoint, centred at breakpoint
+    c(mu - n * mad(dat[which(dat <= mu)], center = mu),
+      mu + n * mad(dat[which(dat > mu)], center = mu))
+}
 
 ####################################################################################################
 
 
+#' Modal density
+#' 
+#' Calculate location of modal density of a distribution
+#' @param dat Data for which bounds are to be calculated
+#' @return Value at which modal density occurs
+#' @export
+#' 
+modal.density <- function(dat) {
+    zz <- density(dat, n = 65536, na.rm = T)
+    zz$x[which.max(zz$y)]
+}
 
 #' Create sample of 'healthy' pixels
 #'

@@ -1,23 +1,36 @@
 
-#' Linear regression of white value against grey & black
+#' Linear regression of observed pixel values
 #' 
+#' Perform linear regression of specified variables
+#' @param im Acquisition array on which regression is to be performed. Must contain black, white and grey images.
+#' @param terms Text string providing formula to be fitted. Default is "g ~ b * w", predicting grey value based on black and white.
+#' @param res.only Boolean: return only a matrix of residuals (T) or (F) a list containing the fitted data, residuals and original data, along with the RMSE and adjusted RMSE.
+#' @return If res.only == T, returns a matrix of residuals. If F, returns a list containing a data.frame and the RMSE of the fitted model.
 #' @export
 #' 
-fit.w.lm <- function(im) {
+fit.w.lm <- function(im, terms = "g ~ b * w", res.only = T) {
     
-    # fit linear model excluding edge pixels
-    df <- setNames(data.frame(melt(im[,,"black"]), 
-                              melt(im[,,"grey"]),
-                              melt(im[,,"white"]))[,c("X1", "X2", "value", "value.1", "value.2")],
+    df <- setNames(data.frame(melt(im[, , "black"]), 
+                              melt(im[, , "grey"]), 
+                              melt(im[, , "white"]))[, c("X1", "X2", "value", "value.1", "value.2")],
                    nm = c("x", "y", "b", "g", "w"))
-    w.lm <- lm(w ~ b * g,
-               data = df[findInterval(df$x, c(40.5, 2008.5)) == 1 &
-                             findInterval(df$y, c(40.5, 2008.5)) == 1,])
     
-    df$fv <- predict(w.lm, df[,c("b", "g")])
-    df$res <- df$w - df$fv
+    # fit linear model to central part of image only (excludes edge effects)
+    w.lm <- lm(as.formula(terms), 
+               data = df[findInterval(df$x, c(40.5, 2008.5)) == 1 & 
+                             findInterval(df$y, c(40.5, 2008.5)) == 1, ])
     
-    list(df = df, r2 = round(summary(w.lm)$adj.r.squared, 3), rmse = round(summary(w.lm)$sigma, 2))
+    df$fv <- predict(w.lm, df)
+    
+    target <- gsub(" ~.*$", "", terms)
+    
+    df$res <- eval(parse(text = paste0("df$", target))) - df$fv
+    
+    if (res.only) {
+        return(array(df$res, dim = dim(im[,,"black"])))
+    } else {
+        return(list(df = df, r2 = round(summary(w.lm)$adj.r.squared, 3), rmse = round(summary(w.lm)$sigma, 2)))
+    }
 }
 
 

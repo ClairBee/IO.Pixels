@@ -2,11 +2,21 @@
 % Please edit documentation in R/White-regression.R
 \name{fit.w.lm}
 \alias{fit.w.lm}
-\title{Linear regression of white value against grey & black}
+\title{Linear regression of observed pixel values}
 \usage{
-fit.w.lm(im)
+fit.w.lm(im, terms = "g ~ b * w", res.only = T)
+}
+\arguments{
+\item{im}{Acquisition array on which regression is to be performed. Must contain black, white and grey images.}
+
+\item{terms}{Text string providing formula to be fitted. Default is "g ~ b * w", predicting grey value based on black and white.}
+
+\item{res.only}{Boolean: return only a matrix of residuals (T) or (F) a list containing the fitted data, residuals and original data, along with the RMSE and adjusted RMSE.}
+}
+\value{
+If res.only == T, returns a matrix of residuals. If F, returns a list containing a data.frame and the RMSE of the fitted model.
 }
 \description{
-Linear regression of white value against grey & black
+Perform linear regression of specified variables
 }
 
