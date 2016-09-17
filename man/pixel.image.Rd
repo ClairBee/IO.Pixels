@@ -5,9 +5,8 @@
 \title{Display pixel values as image}
 \usage{
 pixel.image(data, title = "", x.range = c(1:nrow(data)),
-  y.range = c(1:ncol(data)), midpoint = "mean",
-  break.levels = sd.levels(data, "mean"), panels = F, x.lab = "",
-  y.lab = "", ...)
+  y.range = c(1:ncol(data)), break.levels = th.levels(data), panels = F,
+  x.lab = "", y.lab = "", ...)
 }
 \arguments{
 \item{data}{2-dimensional matrix containing values to be plotted}
@@ -18,9 +17,9 @@ pixel.image(data, title = "", x.range = c(1:nrow(data)),
 
 \item{y.range}{Vector range showing y-range of cells to be included in plot}
 
-\item{midpoint}{Either 'mean' or 'median'. Default is 'mean'}
-
 \item{break.levels}{Vector of values used as breakpoints when binning values}
+
+\item{midpoint}{Either 'mean' or 'median'. Default is 'mean'}
 }
 \description{
 Create an image with pixels shaded according to their distance from the mean value. Displays at lower resolution than contour plot (plots are 20% of the size), but much quicker (10% of time taken).

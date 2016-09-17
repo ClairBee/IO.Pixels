@@ -12,19 +12,48 @@
 #'                    levels = sd.levels(data))
 #' 
 #' 
-sd.levels <- function(data, midpoint = "mean") {
+sd.levels <- function(data, midpoint = "mode") {
     
     data <- data[!is.na(data)]
     data <- data[!is.infinite(data)]
     
-    if (midpoint == "median") {
-        m <- median(data)
-    } else {
-        m <- mean(data)
-    }
-    
+    mfn <- switch(midpoint,
+                  mean = "mean",
+                  median = "median",
+                  mode = "modal.density")
+  
+    m <- eval(parse(text = paste0(mfn, "(data)")))
+
     sort(c(min(data), m + (c(-6, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 6) * sd(data)), max(data)))
 }
+
+
+
+#' Set contour plot levels
+#'
+#' Support function: returns a vector of levels to be used in contour plotting, cutting data at mean and +- 0.5, 1, 2, 3 sd.
+#' @param data Matrix of data to plot
+#' @param midpoint String: use mean or median as midpoint? Default is "mean".
+#' @return Vector of calculated levels
+#' @export
+#' @examples
+#'     filled.contour(x = c(1:dim(data)[1]), y = c(1:dim(data)[2]),
+#'                    data,
+#'                    levels = sd.levels(data))
+#' 
+#' 
+th.levels <- function(data) {
+    
+    data <- data[!is.na(data)]
+    data <- data[!is.infinite(data)]
+    
+    m <- modal.density(data)
+    
+    sort(c(sapply(c(1, 2, 3, 5, 6), function(nn) asymmetric.mad(data, nn)),
+           modal.density(data),
+           range(data)))
+}
+
 
 
 #' Colour scheme for contour plot
@@ -40,22 +69,22 @@ sd.levels <- function(data, midpoint = "mean") {
 #' 
 #' 
 sd.colours <- function() {
-    c("black",             # min to -6sd
-      "darkblue",     # -6 to -3sd
-      "blue",             # -3 to -2sd
+    c("black",             # min to -6sd        # min to -6mad
+      "darkblue",     # -6 to -3sd              # -6 to -5mad
+      "blue",             # -3 to -2sd          # -5 to -3mad
       
-      "cyan3",      # -2 to -1sd
+      "cyan3",      # -2 to -1sd                # -3 to -2mad
       
-      "green1",       # -1 to -0.5sd
-      "greenyellow",    # 0.5 to 0sd
-      "yellow",             # 0 to 0.5sd
-      "gold",           # 0.5 to 1sd
+      "green1",       # -1 to -0.5sd            # -2 to -1mad
+      "greenyellow",    # 0.5 to 0sd            # -1 to 0mad
+      "yellow",             # 0 to 0.5sd        # 0 to 1mad
+      "gold",           # 0.5 to 1sd            # 1 to 2mad
       
-      "orange",              # 1 to 2sd
+      "orange",              # 1 to 2sd         # 2 to 3mad
       
-      "red3",        # 2 to 3sd
-      "purple",           # 3 to 6sd
-      "deeppink")         # 6sd to max    
+      "red3",        # 2 to 3sd                 # 3 to 5mad
+      "purple",           # 3 to 6sd            # 5 to 6mad
+      "deeppink")         # 6sd to max          # 6mad to max  
 }
 
 
@@ -76,7 +105,7 @@ sd.colours <- function() {
 #' 
 #' 
 pixel.image <- function(data, title = "", x.range = c(1:nrow(data)), y.range = c(1:ncol(data)), 
-                        midpoint = "mean", break.levels = sd.levels(data, "mean"), 
+                        break.levels = th.levels(data), 
                         panels = F, x.lab = "", y.lab = "", ...) {
     
     image(x.range, y.range, 
