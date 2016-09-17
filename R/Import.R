@@ -58,7 +58,7 @@ load.objects <- function(fpath = "./02_Objects/images", otype = "pwm", acq.list)
     }
     abind(sapply(acq.list, function(nm) readRDS(paste0(fpath, "/", otype, nm, ".rds")), 
                  simplify = F),
-          along = 4)
+          rev.along = 0)
 }
 
 ####################################################################################################
