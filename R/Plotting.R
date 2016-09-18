@@ -49,7 +49,7 @@ th.levels <- function(data) {
     
     m <- modal.density(data)
     
-    sort(c(sapply(c(1, 2, 3, 5, 6), function(nn) asymmetric.mad(data, nn)),
+    sort(c(sapply(c(1, 2, 3, 4.5, 6), function(nn) asymmetric.mad(data, nn)),
            modal.density(data),
            range(data)))
 }
