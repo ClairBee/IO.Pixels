@@ -42,15 +42,19 @@ sd.levels <- function(data, midpoint = "mode") {
 #'                    levels = sd.levels(data))
 #' 
 #' 
-th.levels <- function(data) {
+th.levels <- function(data, fix.centre = NA) {
     
     data <- data[!is.na(data)]
     data <- data[!is.infinite(data)]
     
-    m <- modal.density(data)
+    if(is.na(fix.centre)) {
+        m <- modal.density(data)
+    } else {
+        m <- fix.centre
+    }
     
-    sort(c(sapply(c(1, 2, 3, 4.5, 6), function(nn) asymmetric.mad(data, nn)),
-           modal.density(data),
+    sort(c(sapply(c(1, 2, 3, 4.5, 6), function(nn) asymmetric.mad(data, nn, fix.centre = fix.centre)),
+           m,
            range(data)))
 }
 

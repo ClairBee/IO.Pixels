@@ -4,7 +4,7 @@
 \alias{asymmetric.mad}
 \title{Asymmetric NMAD thresholds}
 \usage{
-asymmetric.mad(dat, n = 6)
+asymmetric.mad(dat, n = 6, fix.centre = NA)
 }
 \arguments{
 \item{dat}{Data for which bounds are to be calculated}

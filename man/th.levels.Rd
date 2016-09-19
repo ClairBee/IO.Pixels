@@ -4,7 +4,7 @@
 \alias{th.levels}
 \title{Set contour plot levels}
 \usage{
-th.levels(data)
+th.levels(data, fix.centre = NA)
 }
 \arguments{
 \item{data}{Matrix of data to plot}

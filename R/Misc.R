@@ -52,12 +52,16 @@ shading.corrected <- function(im, fix.inf = T) {
 #' @return Vector containing upper and lower bounds
 #' @export
 #' 
-asymmetric.mad <- function(dat, n = 6) {
+asymmetric.mad <- function(dat, n = 6, fix.centre = NA) {
     
     zz <- density(dat, n = 65536, na.rm = T)
     
-    # break at point of maximum density
-    mu <- zz$x[which.max(zz$y)]
+    # break at point of maximum density, OF fixed centre if given
+    if(!is.na(fix.centre)) {
+        mu <- fix.centre
+    } else {
+        mu <- zz$x[which.max(zz$y)]
+    }
     
     # calculate MAD on either side of breakpoint, centred at breakpoint
     c(mu - n * mad(dat[which(dat <= mu)], center = mu),

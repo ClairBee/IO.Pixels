@@ -8,12 +8,16 @@
 #' @return If res.only == T, returns a matrix of residuals. If F, returns a list containing a data.frame and the RMSE of the fitted model.
 #' @export
 #' 
-fit.w.lm <- function(im, terms = "g ~ b * w", res.only = T) {
+fit.w.lm <- function(im, terms = "g ~ b * w", midline = 1024.5, res.only = T) {
     
     df <- setNames(data.frame(melt(im[, , "black"]), 
                               melt(im[, , "grey"]), 
                               melt(im[, , "white"]))[, c("X1", "X2", "value", "value.1", "value.2")],
                    nm = c("x", "y", "b", "g", "w"))
+    if (!is.na(midline)) {
+        df$upper <- df$y > midline
+        terms <- paste0(terms, " + upper")
+    }
     
     # fit linear model to central part of image only (excludes edge effects)
     w.lm <- lm(as.formula(terms), 
@@ -32,7 +36,6 @@ fit.w.lm <- function(im, terms = "g ~ b * w", res.only = T) {
         return(list(df = df, r2 = round(summary(w.lm)$adj.r.squared, 3), rmse = round(summary(w.lm)$sigma, 2)))
     }
 }
-
 
 
 #' Scatter plot of linear regression

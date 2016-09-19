@@ -4,7 +4,7 @@
 \alias{fit.w.lm}
 \title{Linear regression of observed pixel values}
 \usage{
-fit.w.lm(im, terms = "g ~ b * w", res.only = T)
+fit.w.lm(im, terms = "g ~ b * w", midline = 1024.5, res.only = T)
 }
 \arguments{
 \item{im}{Acquisition array on which regression is to be performed. Must contain black, white and grey images.}
