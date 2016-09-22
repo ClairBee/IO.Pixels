@@ -68,6 +68,27 @@ asymmetric.mad <- function(dat, n = 6, fix.centre = NA) {
       mu + n * mad(dat[which(dat > mu)], center = mu))
 }
 
+
+
+#' Calculate class boundaries
+#' 
+#' For a pixelwise mean image, calculate thresholds for each classification
+#' @param dat Data for which boundaries are to be calculated
+#' @param b Boundaries to calculate (as well as \code{\link{asymmetric.mad}}): default is c(0.25, 0.5)
+#' @return Vector of cutpoints
+#' @export
+#' 
+class.boundaries <- function(dat, b = c(0.25, 0.5)) {
+    
+    rng <- c(floor(min(dat, na.rm = T)), ceiling(max(dat, na.rm = T)) + 1)
+    inner.bounds <- asymmetric.mad(dat)
+    
+    vb <- inner.bounds[2] + ((rng[2] - inner.bounds[2]) * b)
+    
+    sort(c(rng, inner.bounds, vb))
+}
+
+
 ####################################################################################################
 
 
