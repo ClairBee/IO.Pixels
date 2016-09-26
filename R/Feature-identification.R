@@ -1,4 +1,6 @@
 
+# SCREEN SPOTS                                                                                  ####
+
 #' Get screen spots in linear/white images
 #' 
 #' Screen spot identification in linear/white images
@@ -16,7 +18,7 @@ screen.spots <- function(im, smooth.span = 1/15, min.diam = 5, midline = 1024.5,
     
     # get white image & residuals from linear regression
     w <- im[,,"white"]
-    linear <- fit.w.lm(im)
+    linear <- fit.gv.lm(im)
     
     # define kernel for morphological operations
     sk <- shapeKernel(c(min.diam, min.diam), type = "disc")
@@ -105,6 +107,9 @@ label.screen.spots <- function(px, spot.list) {
     return(npx[colnames(npx) %in% c(colnames(px), "f.type")])
 }
 
+####################################################################################################
+
+# MULTI-PIXEL DEFECTS                                                                           ####
 
 #' Find column features in pixel map
 #' 
@@ -297,7 +302,7 @@ find.clusters <- function(px, midline = 1024.5) {
     xy <- xy[xy$freq > 1,]
     xy$cl.type <- "cl.body"
     
-    # ---------------------------------------------------------------------------
+    
     # FIND CLUSTER 'ROOTS'
     
     xy <- merge(xy, px, by = c(1:2), all.x = T)
@@ -348,4 +353,6 @@ find.clusters <- function(px, midline = 1024.5) {
     
     return(npx[colnames(npx) %in% c(colnames(px), "f.type")])
 }
+
+####################################################################################################
 
