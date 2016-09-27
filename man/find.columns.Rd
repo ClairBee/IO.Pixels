@@ -5,7 +5,7 @@
 \title{Find column features in pixel map}
 \usage{
 find.columns(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
-  kernel.size)
+  kernel.size, max.sep = 100)
 }
 \arguments{
 \item{px}{Data frame containing pixel coordinates to be grouped}

@@ -4,16 +4,16 @@
 \alias{dense.regions}
 \title{Find dense regions in pixel map}
 \usage{
-dense.regions(px, th.u = 0.5, th.l = 0.05, area = 11, dilate.by = 21)
+dense.regions(px, th.u = 0.5, area = 11, th.l = 2/area, dilate.by = 21)
 }
 \arguments{
 \item{px}{Data frame containing pixel coordinates to be examined}
 
 \item{th.u}{Upper density threshold: any region with density above this threshold will be marked. Default is 0.5}
 
-\item{th.l}{Lower density threshold: any region with density above this threshold, if contiguous with density above the upper threshold, will be marked. Ensures that the edges of dense regions are also identified. Default is 0.05}
-
 \item{area}{Size of area around each pixel to consider when calculating the density at that pixel. Default is 11 (square extending 1mm out from centre pixel in each direction)}
+
+\item{th.l}{Lower density threshold: any region with density above this threshold, if contiguous with density above the upper threshold, will be marked. Ensures that the edges of dense regions are also identified. Default is 0.05}
 
 \item{dilate.by}{Size of structuring element to use in smoothing and dilating the edges of the identified area, to ensure that all edge pixels are included. Default is 21.}
 }

@@ -87,7 +87,15 @@ screen.spots <- function(im, smooth.span = 1/15, min.diam = 5, midline = 1024.5,
 #' 
 label.screen.spots <- function(px, spot.list) {
     
-    spots <- unique(data.frame(do.call("rbind", sp[sapply(sp, nrow) > 0]), s.spot = T))
+    # filter to check if spots found in multiple lists
+    sp <- spot.list[sapply(spot.list, nrow) > 0]
+    
+    # if no screen spots found, return original pixel list
+    if(length(sp) == 0) {
+        return(px)          # no pixels to label
+    }
+    
+    spots <- unique(data.frame(do.call("rbind", sp), s.spot = T))
     
     # identify individual spots
     cc <- clump(px2r(spots), dir = 4)
@@ -99,6 +107,10 @@ label.screen.spots <- function(px, spot.list) {
     # filter out any spots where no component pixels were identified as defects
     xy.s <- ddply(xy, .(id), summarise, defects = sum(!is.na(type)), chk = sum(is.na(type)), size = length(x))
     xy <- xy[xy$id %in% xy.s$id[xy.s$defects > 0],]
+    
+    if(nrow(xy) == 0) {
+        return(px)          # no pixels to label
+    }
     
     npx <- merge(px, data.frame(xy[,1:2], s.spot = T), by = c(1:2), all.x = T)
     
@@ -121,7 +133,15 @@ label.screen.spots <- function(px, spot.list) {
 #' @return Data frame px, with column 'f.type' labelling columns found as feature type 'line.c'
 #' @export
 #' 
-find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 * kernel.size) {
+find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 * kernel.size, max.sep = 100) {
+    
+    # filter out any features already identified
+    if("f.type" %in% colnames(px)) {
+        fpx <- px[is.na(px$f.type),]
+    } else {
+        fpx <- px
+        px$f.type <- NA
+    }
     
     # if kernel size is even sides, add 1
     if(kernel.size %% 2 == 0) {kernel.size <- kernel.size + 1}
@@ -134,10 +154,10 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
     
     # if midline given, split data & apply twice (row/col labels are inverted!)
     if(!is.na(midline)) {
-        px.list <- list(px[px$col > midline,],
-                        px[px$col < midline,])
+        px.list <- list(fpx[fpx$col > midline,],
+                        fpx[fpx$col < midline,])
     } else {
-        px.list <- list(px)
+        px.list <- list(fpx)
     }
     
     lines <- lapply(px.list, 
@@ -148,27 +168,41 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
                         
                         # find candidate lines
                         cand <- data.frame(which(rr >= 2 * kernel.size, arr.ind = T))
-                        cc <- ddply(cand, .(x = row), summarise,
+                        cc <- ddply(cand, .(x = row), summarise, lower = min(col), upper = max(col),
                                     size = length(row), len = max(col) - min(col) + 1, cover = size / len)
                         cc <- cc[cc$size > min.length, ]
                         
-                        # for each candidate line, set pixels on that columns to feature type "line"
-                        if (is.na(midline)) {
-                            r.rng <- 1:max(cand$col)
-                        } else {
-                            if(max(cand$col) > midline) {
-                                r.rng <- ceiling(midline):max(cand$col)     # rows in upper panel
+                        if(nrow(cc) > 0) {
+                            
+                            # set extension to each column
+                            if (is.na(midline)) {
+                                cc$end <- cc$upper + max.sep
+                                cc$start <- cc$lower - max.sep
                             } else {
-                                r.rng <- 1:floor(midline)                   # rows in lower panel
+                                if(max(cand$col) > midline) {
+                                    cc$end <- sapply(cc$lower, function(lim) max(lim - 100, ceiling(midline)))
+                                    cc$start <- cc$upper + max.sep
+                                } else {
+                                    cc$end <- cc$lower - max.sep
+                                    cc$start <- sapply(cc$upper, function(lim) min(lim + 100, floor(midline)))
+                                }
                             }
+                            
+                            zz <- apply(cc, 1, 
+                                        function(ll) {
+                                            ll <- unlist(ll)
+                                            cbind(ll["x"], ll["end"]:ll["start"])
+                                        })
+
+                            # for each candidate line, set pixels on that column to feature type "line"
+                            cols <- data.frame(do.call("rbind", zz),
+                                       col.type = "line.c")
                         }
-                        data.frame(x = rep(cc$x, each = length(r.rng)), 
-                                   r.rng = rep(r.rng, length(cc$x)),
-                                   col.type = "line.c")
                     })
+    
     lines <- rbind.fill(lines[sapply(lines, nrow) > 0])
     px.new <- merge(px, lines, by = c(1:2), all.x = T)
-    px.new$f.type[px.new$col.type == "line.c"] <- "line.c"
+    px.new$f.type[px.new$col.type == "line.c" & is.na(px.new$f.type)] <- "line.c"
     
     # return only original columns, with new "f.type" column if not already present
     return(px.new[, colnames(px.new) %in% c(colnames(px), "f.type")])
@@ -186,6 +220,14 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
 #' 
 find.rows <- function(px, kernel.size = 5, min.length = 3 * kernel.size) {
     
+    # filter out any features already identified
+    if("f.type" %in% colnames(px)) {
+        fpx <- px[is.na(px$f.type),]
+    } else {
+        fpx <- px
+        px$f.type <- NA
+    }
+    
     # if kernel size is even sides, add 1
     if(kernel.size %% 2 == 0) {kernel.size <- kernel.size + 1}
     
@@ -196,13 +238,17 @@ find.rows <- function(px, kernel.size = 5, min.length = 3 * kernel.size) {
                   ncol = kernel.size))
     
     # convert px to raster, convolve with kernel, convert back to matrix
-    rr <- r2m(focal(px2r(px, im.dim = apply(px[,1:2], 2, max) + kernel.size * c(2,2)), k))
+    rr <- r2m(focal(px2r(fpx, im.dim = apply(px[,1:2], 2, max) + kernel.size * c(2,2)), k))
     
     # find candidate lines
     cand <- data.frame(which(rr >= 2 * kernel.size, arr.ind = T))
     cc <- ddply(cand, .(x = col), summarise,
                 size = length(row), len = max(row) - min(row) + 1, cover = size / len)
     cc <- cc[cc$size > min.length, ]
+    
+    if (nrow(cc) == 0) {
+        return(px)
+    }
     
     c.rng <- 1:max(px$row)
     
@@ -211,7 +257,7 @@ find.rows <- function(px, kernel.size = 5, min.length = 3 * kernel.size) {
                              row.type = "line.r")
     
     px.new <- merge(px, rows.found, by = c(1:2), all.x = T)
-    px.new$f.type[px.new$row.type == "line.r"] <- "line.r"
+    px.new$f.type[px.new$row.type == "line.r" & is.na(px$f.type)] <- "line.r"
     
     # return only original columns, with new "f.type" column if not already present
     return(px.new[,colnames(px.new) %in% c(colnames(px), "f.type")])
@@ -229,13 +275,14 @@ find.rows <- function(px, kernel.size = 5, min.length = 3 * kernel.size) {
 #' @return Original pixel list, with column 'f.type' populated with factor 'dense.region' where appropriate.
 #' @export
 #' 
-dense.regions <- function(px, th.u = 0.5, th.l = 0.05, area = 11, dilate.by = 21) {
+dense.regions <- function(px, th.u = 0.5, area = 11, th.l = 2/area, dilate.by = 21) {
     
     # filter out any features already identified
     if("f.type" %in% colnames(px)) {
         fpx <- px[is.na(px$f.type),]
     } else {
         fpx <- px
+        px$f.type <- NA
     }
     
     # define kernel
@@ -245,7 +292,7 @@ dense.regions <- function(px, th.u = 0.5, th.l = 0.05, area = 11, dilate.by = 21
     px.density <- r2m(focal(px2r(fpx, im.dim = (apply(px[,1:2], 2, max) + c(2, 2) * area)), k))
     th.density <- (px.density > th.l) * 1
     
-    # get clumps of higher-density pixels
+    # get clumps of mid-density pixels
     cc <- clump(m2r(th.density))
     
     cand <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
@@ -270,7 +317,7 @@ dense.regions <- function(px, th.u = 0.5, th.l = 0.05, area = 11, dilate.by = 21
     npx <- merge(px, data.frame(qq, dense = T), by = c(1:2), all.x = T)
     npx$f.type[npx$dense & is.na(npx$f.type)] <- "dense.region"
     
-    return(npx[,colnames(npx) %in% c(colnames(px), "f.type")])
+    return(npx[, colnames(npx) %in% colnames(px)])
 }
 
 
