@@ -43,3 +43,25 @@ r2m <- function(rast) {
     mat <- matrix(getValues(rast), ncol = dim(rast)[2], byrow = T)
     t(mat[dim(mat)[1]:1,,drop = F])
 }
+
+
+#' Convert pixel coordinates to PPP object
+#' 
+#' Convert coordinates from bad pixel map to a PPP object for spatial analysis. The resulting image can be further cropped if necessary.
+#' @param px data.frame or matrix, the first two columns of which contain the X and Y coordinates of points to be marked on the raster
+#' @param im.dim Vector of dimensions for the final raster. Default is c(2048, 2048).
+#' @param crop List of two vectors of crop boundaries. Default is list(c(1, im.dim[1]), c(1, im.dim[2])), which crops to original image area.
+#' @return ppp object of the required dimensions
+#' @export
+#' 
+px2ppp <- function(px, im.dim = c(2048, 2048), crop = list(c(1, im.dim[1]), c(1, im.dim[2]))) {
+    
+    # crop image if necessary
+    tmp <- array(0, dim = im.dim)
+    tmp[as.matrix(px[,1:2])] <- 1
+    tmp[c(1:crop[[1]][1], crop[[1]][2]:im.dim[1]),] <- 0    # crop left & right edges
+    tmp[,c(1:crop[[2]][1], crop[[2]][2]:im.dim[2])] <- 0    # crop top & bottom edges
+    px <- which(tmp == 1, arr.ind = T)
+    
+    ppp(px[,1], px[,2], crop[[1]], crop[[2]])
+}

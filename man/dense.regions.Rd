@@ -16,6 +16,8 @@ dense.regions(px, th.u = 0.5, area = 11, th.l = 2/area, dilate.by = 21)
 \item{th.l}{Lower density threshold: any region with density above this threshold, if contiguous with density above the upper threshold, will be marked. Ensures that the edges of dense regions are also identified. Default is 0.05}
 
 \item{dilate.by}{Size of structuring element to use in smoothing and dilating the edges of the identified area, to ensure that all edge pixels are included. Default is 21.}
+
+\item{offset}{Vector giving x- and y- offsets of image. To be used in padding the image to avoid edge effects}
 }
 \value{
 Original pixel list, with column 'f.type' populated with factor 'dense.region' where appropriate.

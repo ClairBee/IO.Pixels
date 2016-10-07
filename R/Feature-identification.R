@@ -146,11 +146,24 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
     # if kernel size is even sides, add 1
     if(kernel.size %% 2 == 0) {kernel.size <- kernel.size + 1}
     
-    # define kernel to use in convolution
+    # define kernels to use in convolution
+    # find single columns
     k <- matrix(c(rep(-1, kernel.size * floor(kernel.size / 2)), 
                   rep(kernel.size - 1, kernel.size), 
                   rep(-1, kernel.size * floor(kernel.size / 2))),
-                ncol = kernel.size)
+                nrow = kernel.size)
+    
+    # find double columns
+    k3 <- matrix(c(rep(-1, kernel.size * floor(kernel.size / 2)), 
+                   rep((kernel.size - 1) / 3, kernel.size * 3), 
+                   rep(-1, kernel.size * floor(kernel.size / 2))),
+                 nrow = kernel.size)
+    
+    # find triple columns
+    k5 <- matrix(c(rep(-1, kernel.size * floor(kernel.size / 2)), 
+                   rep((kernel.size - 1) / 5, kernel.size * 5), 
+                   rep(-1, kernel.size * floor(kernel.size / 2))),
+                 nrow = kernel.size)
     
     # if midline given, split data & apply twice (row/col labels are inverted!)
     if(!is.na(midline)) {
@@ -164,10 +177,13 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
                     function(c.px) {
                         
                         # convert px to raster, convolve with kernel, convert back to matrix
-                        rr <- r2m(focal(px2r(c.px, im.dim = c(2048, 2048)), k))
+                        rr <- r2m(focal(px2r(c.px, im.dim = c(2048, 2048)), k, pad = T, padValue = 0))
+                        rr3 <- r2m(focal(px2r(c.px, im.dim = c(2048, 2048)), k3, pad = T, padValue = 0))
+                        rr5 <- r2m(focal(px2r(c.px, im.dim = c(2048, 2048)), k5, pad = T, padValue = 0))
                         
                         # find candidate lines
-                        cand <- data.frame(which(rr >= 2 * kernel.size, arr.ind = T))
+                        cand <- data.frame(which(rr >= 2 * kernel.size | rr3 >= 2 * kernel.size |
+                                                     rr5 >= 2 * kernel.size, arr.ind = T))
                         cc <- ddply(cand, .(x = row), summarise, lower = min(col), upper = max(col),
                                     size = length(row), len = max(col) - min(col) + 1, cover = size / len)
                         cc <- cc[cc$size > min.length, ]
@@ -183,7 +199,7 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
                                     cc$end <- sapply(cc$lower, function(lim) max(lim - 100, ceiling(midline)))
                                     cc$start <- cc$upper + max.sep
                                 } else {
-                                    cc$end <- cc$lower - max.sep
+                                    cc$end <- min(cc$lower - max.sep, 0)
                                     cc$start <- sapply(cc$upper, function(lim) min(lim + 100, floor(midline)))
                                 }
                             }
@@ -191,22 +207,90 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
                             zz <- apply(cc, 1, 
                                         function(ll) {
                                             ll <- unlist(ll)
-                                            cbind(ll["x"], ll["end"]:ll["start"])
+                                            data.frame(x = ll["x"], y = c(ll["end"]:ll["start"]), row.names = NULL)
                                         })
 
                             # for each candidate line, set pixels on that column to feature type "line"
-                            cols <- data.frame(do.call("rbind", zz),
-                                       col.type = "line.c")
+                            if(class(zz) == "list") {
+                                data.frame(do.call("rbind", zz),
+                                                   col.type = "line.c")
+                            } else {
+                                data.frame(zz, col.type = "line.c")
+                            }
                         }
                     })
     
-    lines <- rbind.fill(lines[sapply(lines, nrow) > 0])
+    lines <- lines[!sapply(sapply(lines, nrow), is.null)]
+    
+    if(length(lines) == 0) {return(px)}
+    
+    if(length(lines) == 2) {lines <- rbind.fill(lines[sapply(lines, nrow) > 0])}
+    
     px.new <- merge(px, lines, by = c(1:2), all.x = T)
     px.new$f.type[px.new$col.type == "line.c" & is.na(px.new$f.type)] <- "line.c"
     
     # return only original columns, with new "f.type" column if not already present
     return(px.new[, colnames(px.new) %in% c(colnames(px), "f.type")])
 }
+
+
+#' Summarise columns by width
+#' 
+#' Group all adjacent column defects in pixel map and summarise each column defect by width
+#' @param px Data frame containing pixel coordinates to be grouped
+#' @param midline Location of panel midline, which electrically separates the upper and lower panels, and so cannot be crossed by column defects. Default is 1024.5; if the detector has no midline separation, enter NA.
+#' @return data.frame summarising multi-column features identified by panel, location and width
+#' @export
+#' 
+count.columns <- function(px, midline = 1024.5) {
+    
+    fpx <- px[px$f.type == "line.c",]
+    
+    if (nrow(fpx) == 0) {return(NULL)}
+    
+    if (is.na(midline)) {
+        px.list <- list(fpx)
+    } else {
+        px.list <- list(upper = fpx[fpx$col > midline,],
+                        lower = fpx[fpx$col < midline,])
+        px.list <- px.list[sapply(px.list, nrow) > 0]
+    }
+    
+    lines <- lapply(px.list, 
+                    function(c.px) {
+                        
+                        # fill in broken lines
+                        c.fill <- ddply(c.px, .(row), summarise, start = min(col), end = max(col))
+                        cf <- apply(c.fill, 1, 
+                                    function(fcol) {
+                                        fcol <- unlist(fcol)
+                                        data.frame(x = fcol["row"], 
+                                                   y = c(fcol["start"] : fcol["end"]), row.names = NULL)
+                                    })
+                        cf <- do.call("rbind", cf)
+                        
+                        # clump adjacent pixels together
+                        cc <- clump(px2r(cf))
+                        xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
+                                         id = getValues(cc)[!is.na(getValues(cc))])
+                        
+                        ll <- ddply(xy, .(id), summarise,
+                                    width = max(x)-min(x)+1,
+                                    start = min(x), range = max(x))
+                        ll$range[ll$width > 1] <- apply(ll[ll$width > 1,3:4], 1, paste, collapse = ":")
+                        ll[order(ll$start),c("range", "width")]
+                    })
+    
+    # label upper/lower panel, remove any tables with no columns found 
+    if (length(lines) > 1) {
+        lines <- lapply(names(lines[sapply(lines, nrow) > 0]), 
+                        function(panel) data.frame(panel, lines[[panel]], stringsAsFactors = F))
+    }
+    
+    lines <- rbind.fill(lines)
+    return(lines)
+}
+
 
 
 #' Find row features in pixel map
@@ -268,6 +352,7 @@ find.rows <- function(px, kernel.size = 5, min.length = 3 * kernel.size) {
 #' 
 #' Apply a density filter to the pixel map and identify the densest regions.
 #' @param px Data frame containing pixel coordinates to be examined
+#' @param offset Vector giving x- and y- offsets of image. To be used in padding the image to avoid edge effects
 #' @param th.u Upper density threshold: any region with density above this threshold will be marked. Default is 0.5
 #' @param th.l Lower density threshold: any region with density above this threshold, if contiguous with density above the upper threshold, will be marked. Ensures that the edges of dense regions are also identified. Default is 0.05
 #' @param area Size of area around each pixel to consider when calculating the density at that pixel. Default is 11 (square extending 1mm out from centre pixel in each direction)
@@ -288,8 +373,15 @@ dense.regions <- function(px, th.u = 0.5, area = 11, th.l = 2/area, dilate.by = 
     # define kernel
     k <-  matrix(rep(1 / area^2, area^2), ncol = area)
     
+    # convert px to matrix & trim offset regions
+    padded <- array(0, dim = apply(px[,1:2], 2, max))
+    padded[as.matrix(fpx[,1:2])] <- 1
+    
+    px.lim <- apply(which(padded > 0, arr.ind = T), 2, min)
+    padded <- padded[px.lim[1]:nrow(padded), px.lim[2]:ncol(padded)]
+    
     # convolve image with kernel
-    px.density <- r2m(focal(px2r(fpx, im.dim = (apply(px[,1:2], 2, max) + c(2, 2) * area)), k))
+    px.density <- r2m(focal(m2r(padded), k, na.rm = T))
     th.density <- (px.density > th.l) * 1
     
     # get clumps of mid-density pixels
@@ -299,7 +391,9 @@ dense.regions <- function(px, th.u = 0.5, area = 11, th.l = 2/area, dilate.by = 
                        id = getValues(cc)[!is.na(getValues(cc))])
     cand$density <- px.density[as.matrix(cand[,1:2])]
     
-    blocks <- ddply(cand, .(id), max.d = max(density), summarise)
+    if (nrow(cand) == 0) {return(px)}
+    
+    blocks <- ddply(cand, .(id), summarise, max.d = max(density))
     
     if ((dilate.by == 0) | is.na(dilate.by)) {
         qq <- as.matrix(cand[cand$id %in% blocks$id[blocks$max.d >= th.u], c("x", "y")])
@@ -312,6 +406,12 @@ dense.regions <- function(px, th.u = 0.5, area = 11, th.l = 2/area, dilate.by = 
         
         qq <- which(zz == 1, arr.ind = T)
     }
+    
+    # adjust coordinates for trimmed regions
+    qq[,1] <- qq[,1] + px.lim[1] - 1
+    qq[,2] <- qq[,2] + px.lim[2] - 1
+    
+    if(nrow(qq) == 0) {return(px)}
     
     # label all free pixels within affected regions
     npx <- merge(px, data.frame(qq, dense = T), by = c(1:2), all.x = T)
@@ -399,6 +499,40 @@ find.clusters <- function(px, midline = 1024.5) {
     npx$f.type[npx$cl.type.y == "cl.root"] <- "cl.root"
     
     return(npx[colnames(npx) %in% c(colnames(px), "f.type")])
+}
+
+
+#' Count clusters by size
+#' 
+#' Count all clusters of given size in pixel map. Also checks main direction of spread (horizontal or vertical) 
+#' @param px Data frame containing pixel coordinates to be examined
+#' @param check.dir Boolean: instead of producing summary table, should paired t-test of mean dimensions of clusters be performed? Default is F.
+#' @return Data.frame summarising sizes of clusters found by dominant direction of spread
+#' @export
+#' 
+count.clusters <- function(px, check.dir = F) {
+    c.px <- px[px$f.type %in% c("cl.root", "cl.body"),]
+    
+    cc <- clump(px2r(c.px), dir = 4)
+    xy <- data.frame(xyFromCell(cc, which(!is.na(getValues(cc)))),
+                     id = getValues(cc)[!is.na(getValues(cc))])
+    
+    cl <- ddply(xy, .(id), summarise,
+                xm = mean(x), ym = mean(y), size = length(x), 
+                height = max(y) - min(y) + 1, width = max(x) - min(x) + 1,
+                diff = height - width,
+                type = c("single", "double", "small", "medium", "large", "mega", "error")[findInterval(size, c(0, 1.5, 2.5, 3.5, 9.5, 17.5, 36.5, 99999))],
+                dir = c("flat", "round", "tall")[findInterval(diff, c(-3000, -1.5, 1.5, 3000))])
+    
+    if (check.dir) {
+        return(t.test(cl$width, cl$height, paired = T))
+    }
+
+    cl$dir[cl$size <= 4 & cl$diff >= 1] <- "tall"
+    cl$dir[cl$size <= 4 & cl$diff <= -1] <- "flat"
+    
+    clc <- ddply(cl, .(type, dir), summarise, freq = length(type), o = min(size))
+    clc[order(clc$o),1:3]
 }
 
 ####################################################################################################
