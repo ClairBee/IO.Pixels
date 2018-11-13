@@ -139,6 +139,20 @@ bvn <- function(par, obs) {
 
 
 
+#' Support function: get sum of squared errors of bivariate normal density
+#' 
+#' Function to calculate bivariate Gaussian density (with rho = 0) with given parameters for image surface, and return sum of squared residuals. Primarily a support function for \link{\code{optim}}.
+#' @param par Vector of named parameters, to be passed to function to be evaluated
+#' @param obs Data frame containing columns named x, y and z, containing coordinates at which function should be evaluated, and observed values at those points.
+#' @param fn Function to be evaluated
+#' @export
+#' 
+bvn.ss <- function(par, obs) {
+    est <- bvn(par, obs)
+    sum((est - obs$z)^2, na.rm = T)
+}
+
+
 
 #' Least Squares fit of bivariate Gaussian surface to image
 #' 

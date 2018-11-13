@@ -42,18 +42,18 @@ screen.spots <- function(im, smooth.span = 1/15, min.diam = 5, midline = 1024.5,
         # dim spots in linear residuals
         {
             l.res.low[l.res.low > 0 | is.na(l.res.low)] <- 0        # filter low residuals
-            l.dim <- closing(l.res.low, sk)                         # morphological closing
+            l.dim <- mmand::closing(l.res.low, sk)                         # morphological closing
             l.dim.th <- (l.dim < -mad(l.res, na.rm = T)) * 1        # threshold
-            l.dim.th <- dilate(l.dim.th, sk)                        # slightly enlarge all spots
+            l.dim.th <- mmand::dilate(l.dim.th, sk)                        # slightly enlarge all spots
             l.dim.px <- which(l.dim.th > 0, arr.ind = T)            # get pixel coordinates
         }
         
         # bright regions in linear residuals
         {
             l.res.high[l.res.high < 0 | is.na(l.res.high)] <- 0
-            l.bright <- opening(l.res.high, sk)
+            l.bright <- mmand::opening(l.res.high, sk)
             l.bright.th <- (l.bright > mad(l.res, na.rm = T)) * 1
-            l.bright.th <- dilate(l.bright.th, sk)
+            l.bright.th <- mmand::dilate(l.bright.th, sk)
             l.bright.px <- which(l.bright.th > 0, arr.ind = T)
         }
     }
@@ -67,9 +67,9 @@ screen.spots <- function(im, smooth.span = 1/15, min.diam = 5, midline = 1024.5,
         w.res.low <- w.res
         w.res.low[w.res.low > 0 | is.na(w.res.low)] <- 0
         
-        w.dim <- closing(w.res.low, sk)                         # morphological closing
+        w.dim <- mmand::closing(w.res.low, sk)                         # morphological closing
         w.dim.th <- (w.dim < -mad(w.res, na.rm = T)) * 1        # threshold
-        w.dim.th <- dilate(w.dim.th, sk)                        # slightly enlarge all spots
+        w.dim.th <- mmand::dilate(w.dim.th, sk)                        # slightly enlarge all spots
         w.dim.px <- which(w.dim.th > 0, arr.ind = T)            # get pixel coordinates
     }
     
@@ -120,7 +120,6 @@ label.screen.spots <- function(px, spot.list) {
 }
 
 ####################################################################################################
-
 # MULTI-PIXEL DEFECTS                                                                           ####
 
 #' Find column features in pixel map
@@ -135,9 +134,9 @@ label.screen.spots <- function(px, spot.list) {
 #' 
 find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 * kernel.size, max.sep = 100) {
     
-    # filter out any features already identified
+    # filter out any features already identified (except for screen spots)
     if("f.type" %in% colnames(px)) {
-        fpx <- px[is.na(px$f.type),]
+        fpx <- px[is.na(px$f.type) | px$f.type == "s.spot",]
     } else {
         fpx <- px
         px$f.type <- NA
@@ -209,11 +208,11 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
                                             ll <- unlist(ll)
                                             data.frame(x = ll["x"], y = c(ll["end"]:ll["start"]), row.names = NULL)
                                         })
-
+                            
                             # for each candidate line, set pixels on that column to feature type "line"
                             if(class(zz) == "list") {
                                 data.frame(do.call("rbind", zz),
-                                                   col.type = "line.c")
+                                           col.type = "line.c")
                             } else {
                                 data.frame(zz, col.type = "line.c")
                             }
@@ -227,7 +226,7 @@ find.columns <- function(px, kernel.size = 5, midline = 1024.5, min.length = 3 *
     if(length(lines) == 2) {lines <- rbind.fill(lines[sapply(lines, nrow) > 0])}
     
     px.new <- merge(px, lines, by = c(1:2), all.x = T)
-    px.new$f.type[px.new$col.type == "line.c" & is.na(px.new$f.type)] <- "line.c"
+    px.new$f.type[px.new$col.type == "line.c" & (is.na(px.new$f.type) | px.new$f.type == "s.spot")] <- "line.c"
     
     # return only original columns, with new "f.type" column if not already present
     return(px.new[, colnames(px.new) %in% c(colnames(px), "f.type")])
@@ -304,9 +303,9 @@ count.columns <- function(px, midline = 1024.5) {
 #' 
 find.rows <- function(px, kernel.size = 5, min.length = 3 * kernel.size) {
     
-    # filter out any features already identified
+    # filter out any features already identified (except for screen spots)
     if("f.type" %in% colnames(px)) {
-        fpx <- px[is.na(px$f.type),]
+        fpx <- px[is.na(px$f.type) | px$f.type == "s.spot",]
     } else {
         fpx <- px
         px$f.type <- NA

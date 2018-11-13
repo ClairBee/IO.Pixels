@@ -11,7 +11,7 @@ pixel.plot <- function(px, xlim = c(0,2048), ylim = c(0,2048), pch = 15, panels 
                        main = "", xlab = "", ylab = "", ...) {
     
     plot(px[,1:2], asp = T, 
-         xlim = xlim, ylim = ylim, pch = pch, main = main, xlab = xlab, ylab = ylab, cex = cex, ...)
+         xlim = xlim, ylim = ylim, pch = pch, main = main, xlab = xlab, ylab = ylab, cex = cex, pty = "s", ...)
 }
 
 

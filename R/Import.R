@@ -29,3 +29,26 @@ load.objects <- function(fpath = "./02_Objects/images", otype = "pwm", acq.list)
     }
     return(imp)
 }
+
+
+
+#' Import system-generated bad pixel map
+#'
+#' Extract coordinates of bad pixels from system-generated bad pixel map
+#' @param dt Date of image for which pixel map is to be imported.
+#' @param fpath Path to image folder
+#' @return Data.frame containing x and y coordinates 
+system.map <- function(dt, fpath = "./Image-data/", img = paste0("./02_Objects/images/pwm-", dt, ".rds")) {
+    map <- setNames(as.data.frame(do.call("rbind", 
+                                   lapply(lapply(xmlToList(xmlParse(paste0(fpath, dt, "/BadPixelMap.bpm.xml")))$BadPixels, 
+                                                 "[", 1:2), 
+                                          as.numeric))), 
+             nm = c("x", "y"))
+    
+    # use processed image to identify coordinate offsets
+    os <- apply(which(!is.na(readRDS(img)[,,1]), arr.ind = T), 2, min)
+    
+    map$y <- dim(im)[2] - map$y - (os[2] - 1)
+    map$x <- map$x + os[1]
+    map
+}
